@@ -61,13 +61,13 @@ Plans:
   3. ConsensusTriad creates Team with 3 equal peers
   4. team.arun() executes triad operations asynchronously
   5. Conversation history preserved across deliberate/negotiate/execute phases
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 03-01: Hierarchical triad as Agno Team
-- [ ] 03-02: Dialectic triad as Agno Team
-- [ ] 03-03: Consensus triad as Agno Team
-- [ ] 03-04: Orchestrator integration with Agno triads
+- [ ] 03-01-PLAN.md - Base infrastructure (AgnoTriad, schemas, error handling)
+- [ ] 03-02-PLAN.md - HierarchicalAgnoTriad with orchestrator-directed delegation
+- [ ] 03-03-PLAN.md - DialecticAgnoTriad with synthesizer summaries
+- [ ] 03-04-PLAN.md - ConsensusAgnoTriad with parallel dispatch
 
 ### Phase 4: Shared State
 **Goal**: Markdown-based coordination layer enabling multi-agent collaboration with async locking
