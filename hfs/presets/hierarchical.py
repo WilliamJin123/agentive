@@ -1,5 +1,11 @@
 """Hierarchical Triad preset - orchestrator + 2 workers pattern.
 
+NOTE: For Agno-backed implementation with real LLM calls, use:
+    from hfs.agno.teams import HierarchicalAgnoTriad
+
+This module provides the original stub implementation for reference
+and backwards compatibility during migration.
+
 The HierarchicalTriad implements a clear delegation structure:
 - orchestrator: plans, decomposes tasks, delegates, integrates results
 - worker_a: executes subtask A
