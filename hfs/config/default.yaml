@@ -1,0 +1,100 @@
+# HFS Default Configuration
+# Version: 0.1.0
+#
+# This file contains sensible defaults for HFS. Override these settings
+# in your project-specific configuration file.
+#
+# Configuration Schema Reference:
+# - triads: List of triad definitions
+# - pressure: Temperature and negotiation settings
+# - sections: Territory definitions
+# - arbiter: Conflict resolution settings
+# - output: Code generation settings
+
+config:
+
+  # ============================================================
+  # TRIADS - Define the working units
+  # ============================================================
+  # Note: This default config does not define triads - they must be
+  # specified in the project config. See config/examples/ for examples.
+  triads:
+    - id: "default"
+      preset: "hierarchical"
+      scope:
+        primary: ["layout", "visual"]
+        reach: []
+      budget:
+        tokens: 20000
+        tool_calls: 50
+        time_ms: 30000
+      objectives:
+        - code_quality
+        - maintainability
+
+  # ============================================================
+  # PRESSURE - Force triads to negotiate
+  # ============================================================
+  pressure:
+    # Temperature controls boundary malleability
+    # 1.0 = fully malleable, 0.0 = frozen
+    initial_temperature: 1.0
+
+    # Temperature decreases by this amount each round
+    temperature_decay: 0.15
+
+    # Negotiation freezes when temperature drops below this
+    freeze_threshold: 0.1
+
+    # Maximum negotiation rounds (hard cap)
+    max_negotiation_rounds: 10
+
+    # Rounds stuck before escalating to arbiter
+    escalation_threshold: 2
+
+    # Global resource constraints
+    global_budget:
+      tokens: 100000      # Total tokens for all triads
+      time_ms: 60000      # 60 seconds wall-clock time
+
+    # Validation checks to run on final output
+    validation:
+      - must_compile
+      - must_render
+      - no_contradictions
+
+  # ============================================================
+  # SECTIONS - The "territory" triads will divide
+  # ============================================================
+  sections:
+    - layout
+    - visual
+    - motion
+    - interaction
+    - state
+    - performance
+    - accessibility
+
+  # ============================================================
+  # ARBITER - Resolves stuck negotiations
+  # ============================================================
+  arbiter:
+    model: "claude-sonnet-4-20250514"
+    max_tokens: 2000
+    temperature: 0.3
+
+  # ============================================================
+  # OUTPUT - Code generation settings
+  # ============================================================
+  output:
+    # Framework format: react | vue | svelte | html | vanilla
+    format: "react"
+
+    # Style system: tailwind | css-modules | styled-components | vanilla
+    style_system: "tailwind"
+
+    # Include emergent center analysis in output
+    include_emergent_report: true
+
+    # Include full negotiation history in output
+    include_negotiation_log: false

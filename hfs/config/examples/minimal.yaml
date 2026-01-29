@@ -1,0 +1,113 @@
+# HFS Minimal Configuration - 2 Triads
+#
+# This is the simplest viable HFS setup with just two triads:
+# - design: Handles visual, layout, and motion (dialectic preset)
+# - engineering: Handles state, interaction, and performance (hierarchical preset)
+#
+# Use this configuration for:
+# - Quick prototypes
+# - Simple components
+# - Learning HFS basics
+# - Low-budget runs
+
+config:
+
+  # ============================================================
+  # TRIADS
+  # ============================================================
+  triads:
+    # Design Triad - Creative work using dialectic preset
+    # (proposer -> critic -> synthesizer flow)
+    - id: "design"
+      preset: "dialectic"
+      scope:
+        primary:
+          - visual
+          - layout
+          - motion
+        reach:
+          - interaction
+          - accessibility
+      budget:
+        tokens: 30000
+        tool_calls: 30
+        time_ms: 30000
+      objectives:
+        - aesthetic_quality
+        - visual_coherence
+        - user_delight
+      system_context: |
+        You are the design authority for this frontend. Focus on creating
+        visually appealing, coherent interfaces that delight users. Balance
+        aesthetics with usability and accessibility.
+
+    # Engineering Triad - Execution work using hierarchical preset
+    # (orchestrator -> worker_a + worker_b flow)
+    - id: "engineering"
+      preset: "hierarchical"
+      scope:
+        primary:
+          - state
+          - interaction
+          - performance
+        reach:
+          - layout
+          - accessibility
+      budget:
+        tokens: 30000
+        tool_calls: 30
+        time_ms: 30000
+      objectives:
+        - code_quality
+        - performance
+        - maintainability
+      system_context: |
+        You are the engineering authority for this frontend. Focus on clean,
+        maintainable code with good performance. Ensure state management is
+        predictable and interactions are responsive.
+
+  # ============================================================
+  # PRESSURE
+  # ============================================================
+  pressure:
+    initial_temperature: 1.0
+    temperature_decay: 0.2       # Faster decay for quick resolution
+    freeze_threshold: 0.1
+    max_negotiation_rounds: 5   # Fewer rounds for minimal setup
+    escalation_threshold: 2
+    global_budget:
+      tokens: 60000             # Combined budget for both triads
+      time_ms: 60000
+    validation:
+      - must_compile
+      - must_render
+
+  # ============================================================
+  # SECTIONS
+  # ============================================================
+  # Flat section structure for simplicity
+  sections:
+    - layout
+    - visual
+    - motion
+    - interaction
+    - state
+    - performance
+    - accessibility
+
+  # ============================================================
+  # ARBITER
+  # ============================================================
+  arbiter:
+    model: "claude-sonnet-4-20250514"
+    max_tokens: 1500
+    temperature: 0.3
+
+  # ============================================================
+  # OUTPUT
+  # ============================================================
+  output:
+    format: "react"
+    style_system: "tailwind"
+    include_emergent_report: false  # Minimal output
+    include_negotiation_log: false

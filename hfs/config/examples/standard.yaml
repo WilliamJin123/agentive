@@ -1,0 +1,244 @@
+# HFS Standard Configuration - 6 Triads
+#
+# This is the recommended configuration for production use with six
+# specialized triads:
+# - layout: Spatial structure and responsiveness (hierarchical)
+# - visual: Colors, typography, imagery (dialectic)
+# - motion: Transitions and animations (dialectic)
+# - interaction: User input and feedback (hierarchical)
+# - state: Data flow and persistence (hierarchical)
+# - accessibility: WCAG compliance and inclusive design (consensus)
+#
+# Use this configuration for:
+# - Production frontends
+# - Complex components
+# - Full-featured applications
+# - When quality matters
+
+config:
+
+  # ============================================================
+  # TRIADS
+  # ============================================================
+  triads:
+
+    # Layout Triad - Spatial structure using hierarchical preset
+    - id: "layout"
+      preset: "hierarchical"
+      scope:
+        primary:
+          - layout
+          - layout/grid
+          - layout/spacing
+          - layout/responsive
+        reach:
+          - visual/spacing
+          - accessibility/structure
+      budget:
+        tokens: 15000
+        tool_calls: 20
+        time_ms: 15000
+      objectives:
+        - spatial_clarity
+        - responsive_adaptability
+        - structural_soundness
+      system_context: |
+        You are responsible for the spatial structure of this frontend.
+        Create clear, logical layouts that adapt well to different screen
+        sizes. Consider content hierarchy and visual flow.
+
+    # Visual Triad - Aesthetics using dialectic preset
+    - id: "visual"
+      preset: "dialectic"
+      scope:
+        primary:
+          - visual
+          - visual/colors
+          - visual/typography
+          - visual/imagery
+        reach:
+          - layout/spacing
+          - motion/aesthetics
+      budget:
+        tokens: 15000
+        tool_calls: 20
+        time_ms: 15000
+      objectives:
+        - aesthetic_quality
+        - brand_alignment
+        - visual_hierarchy
+      system_context: |
+        You are responsible for the visual aesthetics of this frontend.
+        Create a cohesive visual language with thoughtful color choices,
+        typography, and imagery. Balance beauty with clarity.
+
+    # Motion Triad - Animation using dialectic preset
+    - id: "motion"
+      preset: "dialectic"
+      scope:
+        primary:
+          - motion
+          - motion/transitions
+          - motion/animations
+        reach:
+          - interaction/feedback
+          - performance/animation
+      budget:
+        tokens: 15000
+        tool_calls: 20
+        time_ms: 15000
+      objectives:
+        - motion_quality
+        - purposeful_animation
+        - performance_awareness
+      system_context: |
+        You are responsible for motion and animation in this frontend.
+        Create purposeful animations that enhance UX without sacrificing
+        performance. Every animation should have a reason.
+
+    # Interaction Triad - User input using hierarchical preset
+    - id: "interaction"
+      preset: "hierarchical"
+      scope:
+        primary:
+          - interaction
+          - interaction/inputs
+          - interaction/feedback
+          - interaction/navigation
+        reach:
+          - state/user_input
+          - motion/feedback
+          - accessibility/keyboard
+      budget:
+        tokens: 15000
+        tool_calls: 20
+        time_ms: 15000
+      objectives:
+        - usability
+        - responsiveness
+        - intuitive_patterns
+      system_context: |
+        You are responsible for user interaction patterns in this frontend.
+        Create intuitive, responsive interactions that feel natural.
+        Consider all input methods and provide clear feedback.
+
+    # State Triad - Data management using hierarchical preset
+    - id: "state"
+      preset: "hierarchical"
+      scope:
+        primary:
+          - state
+          - state/data_flow
+          - state/persistence
+        reach:
+          - interaction/data
+          - performance/reactivity
+      budget:
+        tokens: 15000
+        tool_calls: 20
+        time_ms: 15000
+      objectives:
+        - data_integrity
+        - predictable_flow
+        - efficient_updates
+      system_context: |
+        You are responsible for state management in this frontend.
+        Design predictable data flows with efficient updates.
+        Consider caching, persistence, and synchronization.
+
+    # Accessibility Triad - Inclusive design using consensus preset
+    - id: "accessibility"
+      preset: "consensus"
+      scope:
+        primary:
+          - accessibility
+          - accessibility/semantic
+          - accessibility/keyboard
+          - accessibility/screen_reader
+        reach:
+          - layout
+          - visual
+          - interaction
+      budget:
+        tokens: 15000
+        tool_calls: 20
+        time_ms: 15000
+      objectives:
+        - wcag_compliance
+        - inclusive_design
+        - universal_usability
+      system_context: |
+        You are responsible for accessibility in this frontend.
+        Ensure WCAG compliance and inclusive design. Consider users
+        with different abilities and assistive technology needs.
+
+  # ============================================================
+  # PRESSURE
+  # ============================================================
+  pressure:
+    initial_temperature: 1.0
+    temperature_decay: 0.15
+    freeze_threshold: 0.1
+    max_negotiation_rounds: 7
+    escalation_threshold: 2
+    global_budget:
+      tokens: 100000
+      time_ms: 90000
+    validation:
+      - must_compile
+      - must_render
+      - accessibility_basic
+      - performance_budget
+
+  # ============================================================
+  # SECTIONS
+  # ============================================================
+  # Hierarchical section structure for fine-grained ownership
+  sections:
+    # Layout sections
+    - layout
+    - layout/grid
+    - layout/spacing
+    - layout/responsive
+    # Visual sections
+    - visual
+    - visual/colors
+    - visual/typography
+    - visual/imagery
+    # Motion sections
+    - motion
+    - motion/transitions
+    - motion/animations
+    # Interaction sections
+    - interaction
+    - interaction/inputs
+    - interaction/feedback
+    - interaction/navigation
+    # State sections
+    - state
+    - state/data_flow
+    - state/persistence
+    # Performance section
+    - performance
+    # Accessibility sections
+    - accessibility
+    - accessibility/semantic
+    - accessibility/keyboard
+    - accessibility/screen_reader
+
+  # ============================================================
+  # ARBITER
+  # ============================================================
+  arbiter:
+    model: "claude-sonnet-4-20250514"
+    max_tokens: 2000
+    temperature: 0.3
+
+  # ============================================================
+  # OUTPUT
+  # ============================================================
+  output:
+    format: "react"
+    style_system: "tailwind"
+    include_emergent_report: true
+    include_negotiation_log: true
