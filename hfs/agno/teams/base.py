@@ -71,12 +71,12 @@ class AgnoTriad(ABC):
         # Create toolkit with spec access
         self.toolkit = HFSToolkit(spec=spec, triad_id=config.id)
 
+        # Initialize session state BEFORE creating team (team may need it)
+        self._session_state = TriadSessionState()
+
         # Initialize agents and team (subclass implementations)
         self.agents = self._create_agents()
         self.team = self._create_team()
-
-        # Initialize session state
-        self._session_state = TriadSessionState()
 
     @abstractmethod
     def _create_agents(self) -> Dict[str, Agent]:
