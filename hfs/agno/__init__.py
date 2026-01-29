@@ -14,6 +14,10 @@ Exports:
     get_openrouter_model: Get a rotating OpenRouter model
     list_available_providers: List providers that were successfully initialized
     HFSToolkit: Agno toolkit with HFS tools for agents
+    AgnoTriad: Abstract base class for Agno-based triads
+    PhaseSummary: Structured summary for phase transitions
+    TriadSessionState: Session state with role-scoped history
+    TriadExecutionError: Exception for triad execution failures
 """
 
 from .providers import ProviderManager, PROVIDER_CONFIGS
@@ -28,6 +32,7 @@ from .models import (
     list_available_providers,
 )
 from .tools import HFSToolkit
+from .teams import AgnoTriad, PhaseSummary, TriadSessionState, TriadExecutionError
 
 __all__ = [
     # Core
@@ -46,4 +51,9 @@ __all__ = [
     "list_available_providers",
     # Tools
     "HFSToolkit",
+    # Teams
+    "AgnoTriad",
+    "PhaseSummary",
+    "TriadSessionState",
+    "TriadExecutionError",
 ]
