@@ -13,6 +13,7 @@ Exports:
     get_gemini_model: Get a rotating Gemini model
     get_openrouter_model: Get a rotating OpenRouter model
     list_available_providers: List providers that were successfully initialized
+    HFSToolkit: Agno toolkit with HFS tools for agents
 """
 
 from .providers import ProviderManager, PROVIDER_CONFIGS
@@ -26,6 +27,7 @@ from .models import (
     get_openrouter_model,
     list_available_providers,
 )
+from .tools import HFSToolkit
 
 __all__ = [
     # Core
@@ -42,4 +44,6 @@ __all__ = [
     "get_openrouter_model",
     # Utilities
     "list_available_providers",
+    # Tools
+    "HFSToolkit",
 ]
