@@ -1,0 +1,3 @@
+- Do not increase code complexity in the name of "backwards compatibility". Heavily prefer changing downstream usage to reflect the current API / implementations.
+- Do not make thousands of tests to test functionality. tests should be a balance of modularity, but also completeness per test (one test shouldn't jsut test one specific use case of one operation, but rather be more comprehensive, even as a unit test)
+- Reason about the type interfaces (especially for apis) and make sure they are efficient, pragmatic, and the best type for data in the particular use case.
