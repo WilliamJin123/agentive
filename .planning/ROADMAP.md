@@ -13,7 +13,7 @@ Transform HFS from a mock-powered demo into a real LLM-powered multi-agent negot
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Keycycle Foundation** - Multi-provider key rotation with TiDB persistence
-- [ ] **Phase 2: Agno Tools** - HFS-specific tools as Agno @tool decorators
+- [x] **Phase 2: Agno Tools** - HFS-specific tools as Agno @tool decorators
 - [ ] **Phase 3: Agno Teams** - Triads implemented as Agno Teams with async execution
 - [ ] **Phase 4: Shared State** - Markdown-based coordination layer with async locking
 - [ ] **Phase 5: Model Tiers** - Role-based model selection with adaptive escalation
@@ -49,7 +49,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 02-01-PLAN.md - HFSToolkit with Pydantic validation and 5 tool methods
+- [x] 02-01-PLAN.md - HFSToolkit with Pydantic validation and 5 tool methods
 
 ### Phase 3: Agno Teams
 **Goal**: Triads execute as Agno Teams with 3 agent members and conversation history
@@ -136,7 +136,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Keycycle Foundation | 2/2 | Complete | 2026-01-29 |
-| 2. Agno Tools | 0/1 | Planned | - |
+| 2. Agno Tools | 1/1 | Complete | 2026-01-29 |
 | 3. Agno Teams | 0/4 | Not started | - |
 | 4. Shared State | 0/1 | Not started | - |
 | 5. Model Tiers | 0/3 | Not started | - |
