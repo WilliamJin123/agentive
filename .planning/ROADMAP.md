@@ -15,9 +15,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Keycycle Foundation** - Multi-provider key rotation with TiDB persistence
 - [ ] **Phase 2: Agno Tools** - HFS-specific tools as Agno @tool decorators
 - [ ] **Phase 3: Agno Teams** - Triads implemented as Agno Teams with async execution
-- [ ] **Phase 4: Model Tiers** - Role-based model selection with adaptive escalation
-- [ ] **Phase 5: Observability** - OpenTelemetry tracing and usage metrics
-- [ ] **Phase 6: Cleanup** - Remove MockLLMClient, require real API keys
+- [ ] **Phase 4: Shared State** - Markdown-based coordination layer with async locking
+- [ ] **Phase 5: Model Tiers** - Role-based model selection with adaptive escalation
+- [ ] **Phase 6: Observability** - OpenTelemetry tracing and usage metrics
+- [ ] **Phase 7: Cleanup** - Remove MockLLMClient, require real API keys
 
 ## Phase Details
 
@@ -45,10 +46,10 @@ Plans:
   2. negotiate_response tool can respond with CONCEDE/REVISE/HOLD
   3. generate_code tool can produce code artifacts
   4. Tools validate inputs and return structured responses
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 02-01: Define HFS tools with @tool decorators
+- [ ] 02-01-PLAN.md - HFSToolkit with Pydantic validation and 5 tool methods
 
 ### Phase 3: Agno Teams
 **Goal**: Triads execute as Agno Teams with 3 agent members and conversation history
@@ -68,9 +69,24 @@ Plans:
 - [ ] 03-03: Consensus triad as Agno Team
 - [ ] 03-04: Orchestrator integration with Agno triads
 
-### Phase 4: Model Tiers
-**Goal**: Model selection driven by role, phase, and failure-adaptive escalation
+### Phase 4: Shared State
+**Goal**: Markdown-based coordination layer enabling multi-agent collaboration with async locking
 **Depends on**: Phase 3
+**Requirements**: TBD
+**Success Criteria** (what must be TRUE):
+  1. Markdown state files created/updated by tools
+  2. Read tools return current state without locks
+  3. Write tools queue edits and resolve in order
+  4. IP markers prevent duplicate work across agents
+  5. Agents can query "what's available" vs "what's claimed"
+**Plans**: TBD
+
+Plans:
+- [ ] 04-01: Markdown state schema and tools
+
+### Phase 5: Model Tiers
+**Goal**: Model selection driven by role, phase, and failure-adaptive escalation
+**Depends on**: Phase 4
 **Requirements**: MODL-01, MODL-02, MODL-03, MODL-04
 **Success Criteria** (what must be TRUE):
   1. YAML config specifies model tiers per role (orchestrator, worker, arbiter)
@@ -80,13 +96,13 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 04-01: YAML model tier configuration
-- [ ] 04-02: Phase-based model selection
-- [ ] 04-03: Adaptive escalation on failure
+- [ ] 05-01: YAML model tier configuration
+- [ ] 05-02: Phase-based model selection
+- [ ] 05-03: Adaptive escalation on failure
 
-### Phase 5: Observability
+### Phase 6: Observability
 **Goal**: Full visibility into agent runs, token usage, and phase timing
-**Depends on**: Phase 4
+**Depends on**: Phase 5
 **Requirements**: OBSV-01, OBSV-02, OBSV-03
 **Success Criteria** (what must be TRUE):
   1. OpenTelemetry tracing captures agent runs and tool executions
@@ -96,12 +112,12 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 05-01: OpenTelemetry tracing setup
-- [ ] 05-02: Token and timing metrics
+- [ ] 06-01: OpenTelemetry tracing setup
+- [ ] 06-02: Token and timing metrics
 
-### Phase 6: Cleanup
+### Phase 7: Cleanup
 **Goal**: MockLLMClient removed, HFS requires real API keys to run
-**Depends on**: Phase 5
+**Depends on**: Phase 6
 **Requirements**: CLEN-01
 **Success Criteria** (what must be TRUE):
   1. MockLLMClient class deleted from codebase
@@ -110,18 +126,19 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 06-01: Remove MockLLMClient and update CLI
+- [ ] 07-01: Remove MockLLMClient and update CLI
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Keycycle Foundation | 2/2 | Complete | 2026-01-29 |
-| 2. Agno Tools | 0/1 | Not started | - |
+| 2. Agno Tools | 0/1 | Planned | - |
 | 3. Agno Teams | 0/4 | Not started | - |
-| 4. Model Tiers | 0/3 | Not started | - |
-| 5. Observability | 0/2 | Not started | - |
-| 6. Cleanup | 0/1 | Not started | - |
+| 4. Shared State | 0/1 | Not started | - |
+| 5. Model Tiers | 0/3 | Not started | - |
+| 6. Observability | 0/2 | Not started | - |
+| 7. Cleanup | 0/1 | Not started | - |
