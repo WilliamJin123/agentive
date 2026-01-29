@@ -12,7 +12,7 @@ Transform HFS from a mock-powered demo into a real LLM-powered multi-agent negot
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Keycycle Foundation** - Multi-provider key rotation with TiDB persistence
+- [x] **Phase 1: Keycycle Foundation** - Multi-provider key rotation with TiDB persistence
 - [ ] **Phase 2: Agno Tools** - HFS-specific tools as Agno @tool decorators
 - [ ] **Phase 3: Agno Teams** - Triads implemented as Agno Teams with async execution
 - [ ] **Phase 4: Model Tiers** - Role-based model selection with adaptive escalation
@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md - ProviderManager and model factory setup
-- [ ] 01-02-PLAN.md - Integration tests and verification
+- [x] 01-02-PLAN.md - Integration tests and verification
 
 ### Phase 2: Agno Tools
 **Goal**: HFS operations available as Agno tools that agents can invoke
@@ -119,7 +119,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Keycycle Foundation | 1/2 | In progress | - |
+| 1. Keycycle Foundation | 2/2 | Complete | 2026-01-29 |
 | 2. Agno Tools | 0/1 | Not started | - |
 | 3. Agno Teams | 0/4 | Not started | - |
 | 4. Model Tiers | 0/3 | Not started | - |

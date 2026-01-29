@@ -16,8 +16,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Keycycle Integration
 
-- [ ] **KEYC-01**: MultiProviderWrapper configured for Cerebras (51 keys), Groq (16), Gemini (110), OpenRouter (31)
-- [ ] **KEYC-02**: Usage statistics persisted to TiDB via TIDB_DB_URL
+- [x] **KEYC-01**: MultiProviderWrapper configured for Cerebras (51 keys), Groq (16), Gemini (110), OpenRouter (31)
+- [x] **KEYC-02**: Usage statistics persisted to TiDB via TIDB_DB_URL
 
 ### Model Configuration
 
@@ -69,8 +69,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| KEYC-01 | Phase 1 | Pending |
-| KEYC-02 | Phase 1 | Pending |
+| KEYC-01 | Phase 1 | Complete |
+| KEYC-02 | Phase 1 | Complete |
 | AGNO-02 | Phase 2 | Pending |
 | AGNO-01 | Phase 3 | Pending |
 | AGNO-03 | Phase 3 | Pending |
