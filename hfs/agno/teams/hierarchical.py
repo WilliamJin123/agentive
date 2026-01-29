@@ -154,7 +154,7 @@ TOOLS AVAILABLE:
 
 You think strategically about task decomposition and ensure workers
 have clear, actionable instructions. Always produce structured outputs.""",
-            add_datetime_to_instructions=True,
+            add_datetime_to_context=True,
         )
 
         # Create worker_a with limited tools
@@ -180,7 +180,7 @@ Do not attempt to coordinate with worker_b directly - let the orchestrator handl
 
 TOOL AVAILABLE:
 - generate_code: Generate implementation code for sections""",
-            add_datetime_to_instructions=True,
+            add_datetime_to_context=True,
         )
 
         # Create worker_b with limited tools
@@ -206,7 +206,7 @@ Do not attempt to coordinate with worker_a directly - let the orchestrator handl
 
 TOOL AVAILABLE:
 - generate_code: Generate implementation code for sections""",
-            add_datetime_to_instructions=True,
+            add_datetime_to_context=True,
         )
 
         return {

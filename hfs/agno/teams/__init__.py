@@ -5,6 +5,7 @@ including the AgnoTriad base class and supporting schemas.
 
 Exports:
     AgnoTriad: Abstract base class for Agno-based triads
+    HierarchicalAgnoTriad: Orchestrator + 2 workers pattern implementation
     DialecticAgnoTriad: Thesis-antithesis-synthesis pattern implementation
     PhaseSummary: Structured summary for phase transitions
     TriadSessionState: Session state with role-scoped history
@@ -13,10 +14,12 @@ Exports:
 
 from .schemas import PhaseSummary, TriadSessionState, TriadExecutionError
 from .base import AgnoTriad
+from .hierarchical import HierarchicalAgnoTriad
 from .dialectic import DialecticAgnoTriad
 
 __all__ = [
     "AgnoTriad",
+    "HierarchicalAgnoTriad",
     "DialecticAgnoTriad",
     "PhaseSummary",
     "TriadSessionState",
