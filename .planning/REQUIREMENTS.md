@@ -12,7 +12,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **AGNO-01**: Each HFS triad is implemented as an Agno Team with 3 agent members
 - [x] **AGNO-02**: HFS-specific tools defined as Agno @tool decorators (register_claim, negotiate_response, generate_code)
 - [ ] **AGNO-03**: Triad operations use async execution via team.arun()
-- [ ] **AGNO-04**: Agent conversation history preserved via add_history_to_context=True
+- [ ] **AGNO-04**: Agent conversation history preserved via session_state with role-scoped phase summaries (per CONTEXT.md architectural decision)
 
 ### Keycycle Integration
 
