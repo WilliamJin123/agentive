@@ -1,5 +1,11 @@
 """Dialectic Triad preset - thesis-antithesis-synthesis pattern.
 
+NOTE: For Agno-backed implementation with real LLM calls, use:
+from hfs.agno.teams import DialecticAgnoTriad
+
+This module provides the original stub implementation for reference
+and backwards compatibility during migration.
+
 The DialecticTriad implements a creative tension structure:
 - proposer: generates candidates and possibilities (thesis)
 - critic: finds flaws, asks hard questions (antithesis)
