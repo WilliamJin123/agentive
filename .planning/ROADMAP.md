@@ -30,11 +30,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Key rotation occurs automatically when rate limits hit
   3. Usage statistics persist to TiDB after API calls
   4. All four providers (Cerebras, Groq, Gemini, OpenRouter) configured
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: Multi-provider wrapper setup
-- [ ] 01-02: TiDB persistence integration
+- [ ] 01-01-PLAN.md - ProviderManager and model factory setup
+- [ ] 01-02-PLAN.md - Integration tests and verification
 
 ### Phase 2: Agno Tools
 **Goal**: HFS operations available as Agno tools that agents can invoke
@@ -119,7 +119,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Keycycle Foundation | 0/2 | Not started | - |
+| 1. Keycycle Foundation | 0/2 | Planned | - |
 | 2. Agno Tools | 0/1 | Not started | - |
 | 3. Agno Teams | 0/4 | Not started | - |
 | 4. Model Tiers | 0/3 | Not started | - |
