@@ -119,6 +119,7 @@ class ProviderManager:
         # Log summary after initialization
         healthy = [p for p, _ in PROVIDER_CONFIGS if self.is_provider_healthy(p)]
         logger.info(f"Provider initialization complete: {len(healthy)}/{len(PROVIDER_CONFIGS)} providers healthy")
+        logger.info(self.get_status_summary())
 
     def get_model(
         self,
@@ -218,3 +219,61 @@ class ProviderManager:
             and self._env_status[provider]["configured"]
             and provider in self.wrappers
         )
+
+    def get_any_model(self, estimated_tokens: int = 1000, **kwargs: Any) -> tuple[str, Any]:
+        """
+        Get a model from any available provider.
+
+        Returns (provider_name, model) tuple.
+        Raises NoAvailableKeyError if no providers have keys available.
+
+        Tries providers in order: cerebras, groq, gemini, openrouter
+
+        Args:
+            estimated_tokens: Estimated token usage for the request
+            **kwargs: Additional arguments passed to get_model()
+
+        Returns:
+            Tuple of (provider_name, model)
+
+        Raises:
+            NoAvailableKeyError: If all providers are exhausted
+        """
+        errors: list[tuple[str, Exception]] = []
+        for provider in self.available_providers:
+            try:
+                model = self.get_model(provider, estimated_tokens=estimated_tokens, **kwargs)
+                return (provider, model)
+            except NoAvailableKeyError as e:
+                errors.append((provider, e))
+                continue
+            except Exception as e:
+                errors.append((provider, e))
+                continue
+
+        # All providers failed
+        error_summary = "; ".join(f"{p}: {e}" for p, e in errors)
+        raise NoAvailableKeyError(
+            provider="all",
+            model_id="any",
+            total_keys=0,
+            cooling_down=0,
+        ) from Exception(f"All providers exhausted: {error_summary}")
+
+    def get_status_summary(self) -> str:
+        """
+        Get a human-readable status summary.
+
+        Returns:
+            Multi-line string describing provider status
+        """
+        lines = ["Provider Status:"]
+        for provider, status in self.environment_status.items():
+            configured = "Yes" if status["configured"] else "No"
+            initialized = "Yes" if provider in self.wrappers else "No"
+            lines.append(f"  {provider}: configured={configured}, initialized={initialized}, keys={status['keys']}")
+
+        tidb = "Yes" if os.environ.get("TIDB_DB_URL") else "No"
+        lines.append(f"  TiDB persistence: {tidb}")
+
+        return "\n".join(lines)

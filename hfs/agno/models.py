@@ -68,6 +68,33 @@ def get_model(provider: str, model_id: str | None = None, **kwargs: Any) -> Any:
     return manager.get_model(provider, model_id, **kwargs)
 
 
+def get_any_model(estimated_tokens: int = 1000, **kwargs: Any) -> tuple[str, Any]:
+    """
+    Get a model from any available provider.
+
+    Tries providers in order until one succeeds. Useful for fallback patterns
+    when you don't care which provider handles a request.
+
+    Args:
+        estimated_tokens: Estimated token usage for the request
+        **kwargs: Additional arguments passed to get_model()
+
+    Returns:
+        Tuple of (provider_name, model)
+
+    Raises:
+        NoAvailableKeyError: If all providers are exhausted
+
+    Example:
+        >>> provider, model = get_any_model()
+        >>> agent = Agent(model=model, instructions="You are helpful.")
+        >>> response = agent.run("Hello!")
+        >>> print(f"Handled by: {provider}")
+    """
+    manager = get_provider_manager()
+    return manager.get_any_model(estimated_tokens=estimated_tokens, **kwargs)
+
+
 def get_cerebras_model(model_id: str = "llama-3.3-70b", **kwargs: Any) -> Any:
     """
     Get a rotating Cerebras model.

@@ -18,6 +18,7 @@ Exports:
 from .providers import ProviderManager, PROVIDER_CONFIGS
 from .models import (
     get_model,
+    get_any_model,
     get_provider_manager,
     get_cerebras_model,
     get_groq_model,
@@ -32,6 +33,7 @@ __all__ = [
     "PROVIDER_CONFIGS",
     # Model factory
     "get_model",
+    "get_any_model",
     "get_provider_manager",
     # Provider-specific helpers
     "get_cerebras_model",
