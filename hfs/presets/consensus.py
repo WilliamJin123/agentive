@@ -1,5 +1,13 @@
 """Consensus Triad preset - three equal peers with voting pattern.
 
+NOTE: For Agno-backed implementation with real LLM calls, use:
+    from hfs.agno.teams import ConsensusAgnoTriad
+
+This module provides the original stub implementation for reference
+and backwards compatibility during migration.
+
+---
+
 The ConsensusTriad implements a democratic structure:
 - peer_1, peer_2, peer_3: equal voice, 2/3 majority decides
 
