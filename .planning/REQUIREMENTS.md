@@ -9,10 +9,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Agno Integration
 
-- [ ] **AGNO-01**: Each HFS triad is implemented as an Agno Team with 3 agent members
+- [x] **AGNO-01**: Each HFS triad is implemented as an Agno Team with 3 agent members
 - [x] **AGNO-02**: HFS-specific tools defined as Agno @tool decorators (register_claim, negotiate_response, generate_code)
-- [ ] **AGNO-03**: Triad operations use async execution via team.arun()
-- [ ] **AGNO-04**: Agent conversation history preserved via session_state with role-scoped phase summaries (per CONTEXT.md architectural decision)
+- [x] **AGNO-03**: Triad operations use async execution via team.arun()
+- [x] **AGNO-04**: Agent conversation history preserved via session_state with role-scoped phase summaries (per CONTEXT.md architectural decision)
 
 ### Keycycle Integration
 
@@ -72,9 +72,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | KEYC-01 | Phase 1 | Complete |
 | KEYC-02 | Phase 1 | Complete |
 | AGNO-02 | Phase 2 | Complete |
-| AGNO-01 | Phase 3 | Pending |
-| AGNO-03 | Phase 3 | Pending |
-| AGNO-04 | Phase 3 | Pending |
+| AGNO-01 | Phase 3 | Complete |
+| AGNO-03 | Phase 3 | Complete |
+| AGNO-04 | Phase 3 | Complete |
 | MODL-01 | Phase 4 | Pending |
 | MODL-02 | Phase 4 | Pending |
 | MODL-03 | Phase 4 | Pending |
@@ -91,4 +91,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-29*
-*Last updated: 2026-01-29 after roadmap creation*
+*Last updated: 2026-01-29 after Phase 3 completion*
