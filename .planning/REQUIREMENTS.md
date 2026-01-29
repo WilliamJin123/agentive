@@ -69,26 +69,26 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AGNO-01 | TBD | Pending |
-| AGNO-02 | TBD | Pending |
-| AGNO-03 | TBD | Pending |
-| AGNO-04 | TBD | Pending |
-| KEYC-01 | TBD | Pending |
-| KEYC-02 | TBD | Pending |
-| MODL-01 | TBD | Pending |
-| MODL-02 | TBD | Pending |
-| MODL-03 | TBD | Pending |
-| MODL-04 | TBD | Pending |
-| OBSV-01 | TBD | Pending |
-| OBSV-02 | TBD | Pending |
-| OBSV-03 | TBD | Pending |
-| CLEN-01 | TBD | Pending |
+| KEYC-01 | Phase 1 | Pending |
+| KEYC-02 | Phase 1 | Pending |
+| AGNO-02 | Phase 2 | Pending |
+| AGNO-01 | Phase 3 | Pending |
+| AGNO-03 | Phase 3 | Pending |
+| AGNO-04 | Phase 3 | Pending |
+| MODL-01 | Phase 4 | Pending |
+| MODL-02 | Phase 4 | Pending |
+| MODL-03 | Phase 4 | Pending |
+| MODL-04 | Phase 4 | Pending |
+| OBSV-01 | Phase 5 | Pending |
+| OBSV-02 | Phase 5 | Pending |
+| OBSV-03 | Phase 5 | Pending |
+| CLEN-01 | Phase 6 | Pending |
 
 **Coverage:**
 - v1 requirements: 14 total
-- Mapped to phases: 0
-- Unmapped: 14 ⚠️
+- Mapped to phases: 14
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-29*
-*Last updated: 2026-01-29 after initial definition*
+*Last updated: 2026-01-29 after roadmap creation*
