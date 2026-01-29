@@ -11,9 +11,10 @@ Exports:
 """
 
 from .schemas import PhaseSummary, TriadSessionState, TriadExecutionError
+from .base import AgnoTriad
 
-# AgnoTriad will be added after base.py is created
 __all__ = [
+    "AgnoTriad",
     "PhaseSummary",
     "TriadSessionState",
     "TriadExecutionError",
