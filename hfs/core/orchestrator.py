@@ -16,10 +16,15 @@ This is the main class that users interact with to run HFS.
 
 import asyncio
 import logging
+import time
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+from opentelemetry.trace import Status, StatusCode
+
+from ..observability import get_tracer, get_meter
 from .arbiter import Arbiter, ArbiterConfig
 from .config import HFSConfig, load_config, load_config_dict
 from .emergent import EmergentObserver, EmergentReport
@@ -36,6 +41,55 @@ from ..integration.validator import Validator, ValidationResult
 
 
 logger = logging.getLogger(__name__)
+
+
+# Module-level observability handles (lazy initialization)
+_tracer = None
+_meter = None
+_phase_duration = None
+_phase_success = None
+_phase_failure = None
+
+
+def _get_tracer():
+    """Get tracer instance, initializing on first access."""
+    global _tracer
+    if _tracer is None:
+        _tracer = get_tracer("hfs.orchestrator")
+    return _tracer
+
+
+def _get_phase_metrics():
+    """Get phase metrics instruments, initializing on first access."""
+    global _meter, _phase_duration, _phase_success, _phase_failure
+    if _meter is None:
+        _meter = get_meter("hfs.orchestrator")
+        _phase_duration = _meter.create_histogram(
+            "hfs.phase.duration",
+            description="Duration of HFS pipeline phases",
+            unit="s"
+        )
+        _phase_success = _meter.create_counter(
+            "hfs.phase.success.count",
+            description="Count of successful phase completions",
+            unit="{execution}"
+        )
+        _phase_failure = _meter.create_counter(
+            "hfs.phase.failure.count",
+            description="Count of failed phase executions",
+            unit="{execution}"
+        )
+    return _phase_duration, _phase_success, _phase_failure
+
+
+def _record_phase_metrics(phase_name: str, duration_s: float, success: bool):
+    """Record phase metrics for both histogram and counters."""
+    phase_duration, phase_success, phase_failure = _get_phase_metrics()
+    phase_duration.record(duration_s, {"hfs.phase.name": phase_name})
+    if success:
+        phase_success.add(1, {"hfs.phase.name": phase_name})
+    else:
+        phase_failure.add(1, {"hfs.phase.name": phase_name})
 
 
 @dataclass
@@ -236,192 +290,348 @@ class HFSOrchestrator:
             HFSResult containing the merged artifact, validation results,
             emergent observations, and full negotiation log.
         """
-        import time
         result = HFSResult()
         phase_timings: Dict[str, float] = {}
+        tracer = _get_tracer()
+        run_id = str(uuid.uuid4())[:8]
 
-        try:
-            # ============================================================
-            # LAZY INITIALIZATION: ModelSelector and EscalationTracker
-            # ============================================================
-            # Create ModelSelector if not provided but model_tiers exists in config
-            if self.model_selector is None and 'model_tiers' in self._raw_config:
-                self.model_selector = self._create_default_model_selector()
-                logger.info("Created default ModelSelector from config model_tiers section")
+        with tracer.start_as_current_span("hfs.run") as run_span:
+            run_span.set_attribute("hfs.run.id", run_id)
+            run_span.set_attribute("hfs.run.request_summary", user_request[:100])
+            run_span.set_attribute("hfs.run.triad_count", len(self.config.triads))
 
-            # Create EscalationTracker if not provided but model_selector exists
-            if self.escalation_tracker is None and self.model_selector is not None:
-                if self._config_path is not None:
-                    self.escalation_tracker = EscalationTracker(
-                        self._config_path,
-                        self.model_selector.config,
-                    )
-                    logger.info("Created default EscalationTracker for failure-adaptive escalation")
+            try:
+                # ============================================================
+                # LAZY INITIALIZATION: ModelSelector and EscalationTracker
+                # ============================================================
+                # Create ModelSelector if not provided but model_tiers exists in config
+                if self.model_selector is None and 'model_tiers' in self._raw_config:
+                    self.model_selector = self._create_default_model_selector()
+                    logger.info("Created default ModelSelector from config model_tiers section")
 
-            # ============================================================
-            # PHASE 1: INPUT
-            # ============================================================
-            phase_start = time.time()
-            logger.info("Phase 1: INPUT - Receiving request and config")
+                # Create EscalationTracker if not provided but model_selector exists
+                if self.escalation_tracker is None and self.model_selector is not None:
+                    if self._config_path is not None:
+                        self.escalation_tracker = EscalationTracker(
+                            self._config_path,
+                            self.model_selector.config,
+                        )
+                        logger.info("Created default EscalationTracker for failure-adaptive escalation")
 
-            # Set user request on arbiter for context during escalation
-            self.arbiter.set_user_request(user_request)
+                # ============================================================
+                # PHASE 1: INPUT
+                # ============================================================
+                with tracer.start_as_current_span("hfs.phase.input") as phase_span:
+                    phase_span.set_attribute("hfs.phase.name", "input")
+                    phase_start = time.time()
+                    try:
+                        logger.info("Phase 1: INPUT - Receiving request and config")
 
-            phase_timings["input"] = (time.time() - phase_start) * 1000
-            logger.debug(f"Input phase completed in {phase_timings['input']:.2f}ms")
+                        # Set user request on arbiter for context during escalation
+                        self.arbiter.set_user_request(user_request)
 
-            # ============================================================
-            # PHASE 2: SPAWN TRIADS
-            # ============================================================
-            phase_start = time.time()
-            logger.info("Phase 2: SPAWN TRIADS - Creating triad instances")
+                        duration = time.time() - phase_start
+                        phase_timings["input"] = duration * 1000  # ms for backward compat
+                        phase_span.set_attribute("hfs.phase.duration_s", duration)
+                        phase_span.set_attribute("hfs.phase.success", True)
+                        _record_phase_metrics("input", duration, success=True)
+                        logger.debug(f"Input phase completed in {phase_timings['input']:.2f}ms")
+                    except Exception as e:
+                        duration = time.time() - phase_start
+                        phase_span.record_exception(e)
+                        phase_span.set_status(Status(StatusCode.ERROR, str(e)))
+                        phase_span.set_attribute("hfs.phase.success", False)
+                        _record_phase_metrics("input", duration, success=False)
+                        raise
 
-            self._spawn_triads()
-            self._initialize_spec()
+                # ============================================================
+                # PHASE 2: SPAWN TRIADS
+                # ============================================================
+                with tracer.start_as_current_span("hfs.phase.spawn") as phase_span:
+                    phase_span.set_attribute("hfs.phase.name", "spawn")
+                    phase_start = time.time()
+                    try:
+                        logger.info("Phase 2: SPAWN TRIADS - Creating triad instances")
 
-            phase_timings["spawn"] = (time.time() - phase_start) * 1000
-            logger.info(
-                f"Spawned {len(self.triads)} triads in {phase_timings['spawn']:.2f}ms"
-            )
+                        self._spawn_triads()
+                        self._initialize_spec()
 
-            # ============================================================
-            # PHASE 3: INTERNAL DELIBERATION
-            # ============================================================
-            phase_start = time.time()
-            logger.info("Phase 3: INTERNAL DELIBERATION - Triads analyze request")
+                        duration = time.time() - phase_start
+                        phase_timings["spawn"] = duration * 1000
+                        phase_span.set_attribute("hfs.phase.duration_s", duration)
+                        phase_span.set_attribute("hfs.phase.success", True)
+                        phase_span.set_attribute("hfs.phase.triad_count", len(self.triads))
+                        _record_phase_metrics("spawn", duration, success=True)
+                        logger.info(
+                            f"Spawned {len(self.triads)} triads in {phase_timings['spawn']:.2f}ms"
+                        )
+                    except Exception as e:
+                        duration = time.time() - phase_start
+                        phase_span.record_exception(e)
+                        phase_span.set_status(Status(StatusCode.ERROR, str(e)))
+                        phase_span.set_attribute("hfs.phase.success", False)
+                        _record_phase_metrics("spawn", duration, success=False)
+                        raise
 
-            self._deliberation_results = await self._deliberate(user_request)
+                # ============================================================
+                # PHASE 3: INTERNAL DELIBERATION
+                # ============================================================
+                with tracer.start_as_current_span("hfs.phase.deliberation") as phase_span:
+                    phase_span.set_attribute("hfs.phase.name", "deliberation")
+                    phase_start = time.time()
+                    try:
+                        logger.info("Phase 3: INTERNAL DELIBERATION - Triads analyze request")
 
-            phase_timings["deliberation"] = (time.time() - phase_start) * 1000
-            logger.info(
-                f"Deliberation completed in {phase_timings['deliberation']:.2f}ms"
-            )
+                        self._deliberation_results = await self._deliberate(user_request)
 
-            # ============================================================
-            # PHASE 4: CLAIM REGISTRATION
-            # ============================================================
-            phase_start = time.time()
-            logger.info("Phase 4: CLAIM REGISTRATION - Registering section claims")
+                        duration = time.time() - phase_start
+                        phase_timings["deliberation"] = duration * 1000
+                        phase_span.set_attribute("hfs.phase.duration_s", duration)
+                        phase_span.set_attribute("hfs.phase.success", True)
+                        _record_phase_metrics("deliberation", duration, success=True)
+                        logger.info(
+                            f"Deliberation completed in {phase_timings['deliberation']:.2f}ms"
+                        )
+                    except Exception as e:
+                        duration = time.time() - phase_start
+                        phase_span.record_exception(e)
+                        phase_span.set_status(Status(StatusCode.ERROR, str(e)))
+                        phase_span.set_attribute("hfs.phase.success", False)
+                        _record_phase_metrics("deliberation", duration, success=False)
+                        raise
 
-            self._register_claims(self._deliberation_results)
+                # ============================================================
+                # PHASE 4: CLAIM REGISTRATION
+                # ============================================================
+                with tracer.start_as_current_span("hfs.phase.claims") as phase_span:
+                    phase_span.set_attribute("hfs.phase.name", "claims")
+                    phase_start = time.time()
+                    try:
+                        logger.info("Phase 4: CLAIM REGISTRATION - Registering section claims")
 
-            contested_count = len(self.spec.get_contested_sections())
-            claimed_count = len(self.spec.get_claimed_sections())
+                        self._register_claims(self._deliberation_results)
 
-            phase_timings["claims"] = (time.time() - phase_start) * 1000
-            logger.info(
-                f"Claims registered: {claimed_count} claimed, {contested_count} contested "
-                f"in {phase_timings['claims']:.2f}ms"
-            )
+                        contested_count = len(self.spec.get_contested_sections())
+                        claimed_count = len(self.spec.get_claimed_sections())
 
-            # ============================================================
-            # PHASE 5: NEGOTIATION ROUNDS
-            # ============================================================
-            phase_start = time.time()
-            logger.info("Phase 5: NEGOTIATION - Resolving contested sections")
+                        duration = time.time() - phase_start
+                        phase_timings["claims"] = duration * 1000
+                        phase_span.set_attribute("hfs.phase.duration_s", duration)
+                        phase_span.set_attribute("hfs.phase.success", True)
+                        phase_span.set_attribute("hfs.phase.claimed_count", claimed_count)
+                        phase_span.set_attribute("hfs.phase.contested_count", contested_count)
+                        _record_phase_metrics("claims", duration, success=True)
+                        logger.info(
+                            f"Claims registered: {claimed_count} claimed, {contested_count} contested "
+                            f"in {phase_timings['claims']:.2f}ms"
+                        )
+                    except Exception as e:
+                        duration = time.time() - phase_start
+                        phase_span.record_exception(e)
+                        phase_span.set_status(Status(StatusCode.ERROR, str(e)))
+                        phase_span.set_attribute("hfs.phase.success", False)
+                        _record_phase_metrics("claims", duration, success=False)
+                        raise
 
-            if contested_count > 0:
-                negotiation_engine = NegotiationEngine(
-                    triads=self.triads,
-                    spec=self.spec,
-                    arbiter=self.arbiter,
-                    config={
-                        "temperature_decay": self.config.pressure.temperature_decay,
-                        "max_negotiation_rounds": self.config.pressure.max_negotiation_rounds,
-                        "escalation_threshold": self.config.pressure.escalation_threshold,
-                    }
+                # ============================================================
+                # PHASE 5: NEGOTIATION ROUNDS
+                # ============================================================
+                with tracer.start_as_current_span("hfs.phase.negotiation") as phase_span:
+                    phase_span.set_attribute("hfs.phase.name", "negotiation")
+                    phase_start = time.time()
+                    try:
+                        logger.info("Phase 5: NEGOTIATION - Resolving contested sections")
+
+                        if contested_count > 0:
+                            negotiation_engine = NegotiationEngine(
+                                triads=self.triads,
+                                spec=self.spec,
+                                arbiter=self.arbiter,
+                                config={
+                                    "temperature_decay": self.config.pressure.temperature_decay,
+                                    "max_negotiation_rounds": self.config.pressure.max_negotiation_rounds,
+                                    "escalation_threshold": self.config.pressure.escalation_threshold,
+                                }
+                            )
+                            self.spec = await negotiation_engine.run()
+                            self._negotiation_result = negotiation_engine.get_result()
+                            phase_span.set_attribute(
+                                "hfs.phase.negotiation_rounds",
+                                self._negotiation_result.total_rounds
+                            )
+                        else:
+                            logger.info("No contested sections - skipping negotiation")
+                            # Manually freeze if no negotiation needed
+                            self.spec.freeze()
+                            self._negotiation_result = NegotiationResult()
+                            phase_span.set_attribute("hfs.phase.negotiation_rounds", 0)
+
+                        duration = time.time() - phase_start
+                        phase_timings["negotiation"] = duration * 1000
+                        phase_span.set_attribute("hfs.phase.duration_s", duration)
+                        phase_span.set_attribute("hfs.phase.success", True)
+                        _record_phase_metrics("negotiation", duration, success=True)
+                        logger.info(
+                            f"Negotiation completed in {phase_timings['negotiation']:.2f}ms"
+                        )
+                    except Exception as e:
+                        duration = time.time() - phase_start
+                        phase_span.record_exception(e)
+                        phase_span.set_status(Status(StatusCode.ERROR, str(e)))
+                        phase_span.set_attribute("hfs.phase.success", False)
+                        _record_phase_metrics("negotiation", duration, success=False)
+                        raise
+
+                # ============================================================
+                # PHASE 6: FREEZE
+                # ============================================================
+                with tracer.start_as_current_span("hfs.phase.freeze") as phase_span:
+                    phase_span.set_attribute("hfs.phase.name", "freeze")
+                    phase_start = time.time()
+                    try:
+                        # Already handled by negotiation engine or above
+                        logger.info("Phase 6: FREEZE - Spec is frozen")
+                        phase_span.set_attribute("hfs.phase.spec_status", self.spec.status)
+
+                        duration = time.time() - phase_start
+                        phase_timings["freeze"] = duration * 1000
+                        phase_span.set_attribute("hfs.phase.duration_s", duration)
+                        phase_span.set_attribute("hfs.phase.success", True)
+                        _record_phase_metrics("freeze", duration, success=True)
+                    except Exception as e:
+                        duration = time.time() - phase_start
+                        phase_span.record_exception(e)
+                        phase_span.set_status(Status(StatusCode.ERROR, str(e)))
+                        phase_span.set_attribute("hfs.phase.success", False)
+                        _record_phase_metrics("freeze", duration, success=False)
+                        raise
+
+                # ============================================================
+                # PHASE 7: EXECUTION
+                # ============================================================
+                with tracer.start_as_current_span("hfs.phase.execution") as phase_span:
+                    phase_span.set_attribute("hfs.phase.name", "execution")
+                    phase_start = time.time()
+                    try:
+                        logger.info("Phase 7: EXECUTION - Generating code artifacts")
+
+                        self._artifacts = await self._execute()
+
+                        artifact_count = sum(len(a) for a in self._artifacts.values())
+                        duration = time.time() - phase_start
+                        phase_timings["execution"] = duration * 1000
+                        phase_span.set_attribute("hfs.phase.duration_s", duration)
+                        phase_span.set_attribute("hfs.phase.success", True)
+                        phase_span.set_attribute("hfs.phase.artifact_count", artifact_count)
+                        _record_phase_metrics("execution", duration, success=True)
+                        logger.info(
+                            f"Execution completed: {artifact_count} artifacts "
+                            f"in {phase_timings['execution']:.2f}ms"
+                        )
+                    except Exception as e:
+                        duration = time.time() - phase_start
+                        phase_span.record_exception(e)
+                        phase_span.set_status(Status(StatusCode.ERROR, str(e)))
+                        phase_span.set_attribute("hfs.phase.success", False)
+                        _record_phase_metrics("execution", duration, success=False)
+                        raise
+
+                # ============================================================
+                # PHASE 8: INTEGRATION
+                # ============================================================
+                with tracer.start_as_current_span("hfs.phase.integration") as phase_span:
+                    phase_span.set_attribute("hfs.phase.name", "integration")
+                    phase_start = time.time()
+                    try:
+                        logger.info("Phase 8: INTEGRATION - Merging and validating")
+
+                        # Merge artifacts
+                        merger = CodeMerger(output_format=self.config.output.format)
+                        merged = merger.merge(self._artifacts, self.spec)
+
+                        # Validate
+                        validator = Validator()
+                        validation = validator.validate(merged)
+
+                        duration = time.time() - phase_start
+                        phase_timings["integration"] = duration * 1000
+                        phase_span.set_attribute("hfs.phase.duration_s", duration)
+                        phase_span.set_attribute("hfs.phase.success", True)
+                        phase_span.set_attribute("hfs.phase.file_count", merged.file_count)
+                        phase_span.set_attribute("hfs.phase.validation_passed", validation.passed)
+                        _record_phase_metrics("integration", duration, success=True)
+                        logger.info(
+                            f"Integration completed: {merged.file_count} files, "
+                            f"validation {'passed' if validation.passed else 'failed'} "
+                            f"in {phase_timings['integration']:.2f}ms"
+                        )
+                    except Exception as e:
+                        duration = time.time() - phase_start
+                        phase_span.record_exception(e)
+                        phase_span.set_status(Status(StatusCode.ERROR, str(e)))
+                        phase_span.set_attribute("hfs.phase.success", False)
+                        _record_phase_metrics("integration", duration, success=False)
+                        raise
+
+                # ============================================================
+                # PHASE 9: OUTPUT
+                # ============================================================
+                with tracer.start_as_current_span("hfs.phase.output") as phase_span:
+                    phase_span.set_attribute("hfs.phase.name", "output")
+                    phase_start = time.time()
+                    try:
+                        logger.info("Phase 9: OUTPUT - Generating final report")
+
+                        # Observe emergent properties
+                        emergent = self.observer.observe(
+                            spec=self.spec,
+                            artifacts=self._artifacts,
+                            merged=merged,
+                            validation=validation
+                        )
+
+                        duration = time.time() - phase_start
+                        phase_timings["output"] = duration * 1000
+                        phase_span.set_attribute("hfs.phase.duration_s", duration)
+                        phase_span.set_attribute("hfs.phase.success", True)
+                        phase_span.set_attribute("hfs.phase.health", emergent.overall_health)
+                        _record_phase_metrics("output", duration, success=True)
+                    except Exception as e:
+                        duration = time.time() - phase_start
+                        phase_span.record_exception(e)
+                        phase_span.set_status(Status(StatusCode.ERROR, str(e)))
+                        phase_span.set_attribute("hfs.phase.success", False)
+                        _record_phase_metrics("output", duration, success=False)
+                        raise
+
+                # Build result
+                result.artifact = merged
+                result.validation = validation
+                result.emergent = emergent
+                result.spec = self.spec
+                result.negotiation_log = self._negotiation_result
+                result.phase_timings = phase_timings
+                result.success = True
+
+                total_time = sum(phase_timings.values())
+                run_span.set_attribute("hfs.run.total_duration_ms", total_time)
+                run_span.set_attribute("hfs.run.success", True)
+                run_span.set_status(Status(StatusCode.OK))
+                logger.info(
+                    f"HFS pipeline completed successfully in {total_time:.2f}ms. "
+                    f"Health: {emergent.overall_health}"
                 )
-                self.spec = await negotiation_engine.run()
-                self._negotiation_result = negotiation_engine.get_result()
-            else:
-                logger.info("No contested sections - skipping negotiation")
-                # Manually freeze if no negotiation needed
-                self.spec.freeze()
-                self._negotiation_result = NegotiationResult()
 
-            phase_timings["negotiation"] = (time.time() - phase_start) * 1000
-            logger.info(
-                f"Negotiation completed in {phase_timings['negotiation']:.2f}ms"
-            )
+            except Exception as e:
+                logger.error(f"HFS pipeline failed: {e}", exc_info=True)
+                result.success = False
+                result.error = str(e)
+                result.phase_timings = phase_timings
 
-            # ============================================================
-            # PHASE 6: FREEZE
-            # ============================================================
-            # Already handled by negotiation engine or above
-            logger.info("Phase 6: FREEZE - Spec is frozen")
-
-            # ============================================================
-            # PHASE 7: EXECUTION
-            # ============================================================
-            phase_start = time.time()
-            logger.info("Phase 7: EXECUTION - Generating code artifacts")
-
-            self._artifacts = await self._execute()
-
-            phase_timings["execution"] = (time.time() - phase_start) * 1000
-            artifact_count = sum(len(a) for a in self._artifacts.values())
-            logger.info(
-                f"Execution completed: {artifact_count} artifacts "
-                f"in {phase_timings['execution']:.2f}ms"
-            )
-
-            # ============================================================
-            # PHASE 8: INTEGRATION
-            # ============================================================
-            phase_start = time.time()
-            logger.info("Phase 8: INTEGRATION - Merging and validating")
-
-            # Merge artifacts
-            merger = CodeMerger(output_format=self.config.output.format)
-            merged = merger.merge(self._artifacts, self.spec)
-
-            # Validate
-            validator = Validator()
-            validation = validator.validate(merged)
-
-            phase_timings["integration"] = (time.time() - phase_start) * 1000
-            logger.info(
-                f"Integration completed: {merged.file_count} files, "
-                f"validation {'passed' if validation.passed else 'failed'} "
-                f"in {phase_timings['integration']:.2f}ms"
-            )
-
-            # ============================================================
-            # PHASE 9: OUTPUT
-            # ============================================================
-            phase_start = time.time()
-            logger.info("Phase 9: OUTPUT - Generating final report")
-
-            # Observe emergent properties
-            emergent = self.observer.observe(
-                spec=self.spec,
-                artifacts=self._artifacts,
-                merged=merged,
-                validation=validation
-            )
-
-            phase_timings["output"] = (time.time() - phase_start) * 1000
-
-            # Build result
-            result.artifact = merged
-            result.validation = validation
-            result.emergent = emergent
-            result.spec = self.spec
-            result.negotiation_log = self._negotiation_result
-            result.phase_timings = phase_timings
-            result.success = True
-
-            total_time = sum(phase_timings.values())
-            logger.info(
-                f"HFS pipeline completed successfully in {total_time:.2f}ms. "
-                f"Health: {emergent.overall_health}"
-            )
-
-        except Exception as e:
-            logger.error(f"HFS pipeline failed: {e}", exc_info=True)
-            result.success = False
-            result.error = str(e)
-            result.phase_timings = phase_timings
+                run_span.record_exception(e)
+                run_span.set_status(Status(StatusCode.ERROR, str(e)))
+                run_span.set_attribute("hfs.run.success", False)
+                run_span.set_attribute("hfs.run.error", str(e))
 
         return result
 
