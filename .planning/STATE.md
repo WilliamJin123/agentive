@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-29)
 
 **Core value:** Real LLM-powered multi-agent negotiation with automatic key rotation and failure-adaptive model escalation
-**Current focus:** Phase 5 - Model Tiers (Verified Complete)
+**Current focus:** Phase 6 - Observability (In Progress)
 
 ## Current Position
 
-Phase: 5 of 7 (Model Tiers)
-Plan: 6 of 6 in current phase (orchestrator integration complete)
-Status: Phase verified and complete (13/13 must-haves)
-Last activity: 2026-01-30 - Completed 05-06-PLAN.md, verified phase goal
+Phase: 6 of 7 (Observability)
+Plan: 1 of 3 in current phase (OpenTelemetry foundation complete)
+Status: In progress
+Last activity: 2026-01-30 - Completed 06-01-PLAN.md
 
-Progress: [##########] 100%
+Progress: [################--] 89%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
+- Total plans completed: 16
 - Average duration: 5 min
-- Total execution time: 80 min
+- Total execution time: 84 min
 
 **By Phase:**
 
@@ -32,9 +32,10 @@ Progress: [##########] 100%
 | 3 | 4/4 | 27 min | 7 min |
 | 4 | 2/2 | 8 min | 4 min |
 | 5 | 6/6 | 28 min | 5 min |
+| 6 | 1/3 | 4 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-02 (3 min), 05-03 (4 min), 05-04 (5 min), 05-05 (6 min), 05-06 (8 min)
+- Last 5 plans: 05-03 (4 min), 05-04 (5 min), 05-05 (6 min), 05-06 (8 min), 06-01 (4 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -95,6 +96,9 @@ Recent decisions affecting current work:
 | 05-06 | Lazy initialization in run() for ModelSelector/EscalationTracker | Avoid expensive operations until needed |
 | 05-06 | Store raw config for model_tiers access | HFSConfig doesn't include model_tiers section |
 | 05-06 | Factory dispatch based on model_selector availability | Backward compatibility with create_triad |
+| 06-01 | BatchSpanProcessor for both console and OTLP | SimpleSpanProcessor blocks calling thread, unacceptable for LLM calls |
+| 06-01 | Separate views per metric (not wildcard) | OTel Python SDK requires exact instrument name matching |
+| 06-01 | 10s console interval, 60s OTLP interval | Fast feedback for dev, efficient batching for production |
 
 ### Pending Todos
 
@@ -113,7 +117,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-30T05:20:00Z
-Stopped at: Phase 5 verified complete
+Last session: 2026-01-30T18:07:00Z
+Stopped at: Completed 06-01-PLAN.md
 Resume file: None
-Next: Phase 6 (Observability) - OpenTelemetry tracing and usage metrics
+Next: 06-02-PLAN.md - Orchestrator and triad instrumentation
