@@ -7,6 +7,8 @@ Per CONTEXT.md decisions:
 - Role-scoped history via session_state (NOT add_history_to_context)
 - Abort on failure, preserve partial progress
 - Synthesizer/orchestrator produces phase summaries
+
+Use create_agno_triad() for ModelSelector-based triads (new API).
 """
 
 from abc import ABC, abstractmethod
@@ -20,6 +22,8 @@ from agno.agent import Agent
 from agno.models.base import Model
 
 from hfs.core.triad import TriadConfig, TriadOutput, NegotiationResponse
+from hfs.core.model_selector import ModelSelector
+from hfs.core.escalation_tracker import EscalationTracker
 from hfs.agno.tools import HFSToolkit
 from .schemas import PhaseSummary, TriadSessionState, TriadExecutionError
 
@@ -43,9 +47,11 @@ class AgnoTriad(ABC):
 
     Attributes:
         config: TriadConfig with id, preset, scope, budget, objectives
-        model: Agno Model instance for LLM calls
+        model_selector: ModelSelector for role-based model resolution
+        model: Legacy attribute, set to None (subclasses should use _get_model_for_role)
         spec: Shared Spec instance (warm wax)
         toolkit: HFSToolkit with spec operation tools
+        escalation_tracker: Optional EscalationTracker for failure-adaptive escalation
         agents: Dict of agent role -> Agent instance
         team: Agno Team instance
         _session_state: TriadSessionState for phase context
@@ -54,19 +60,28 @@ class AgnoTriad(ABC):
     def __init__(
         self,
         config: TriadConfig,
-        model: Model,
+        model_selector: ModelSelector,
         spec: "Spec",
+        escalation_tracker: Optional[EscalationTracker] = None,
     ) -> None:
         """Initialize the Agno-based triad.
 
         Args:
             config: Configuration for this triad
-            model: Agno Model instance for LLM calls
+            model_selector: ModelSelector for role-based model resolution.
+                Subclasses should call _get_model_for_role(role_name) to get
+                models for each agent in _create_agents().
             spec: Shared Spec instance for claim/negotiation operations
+            escalation_tracker: Optional tracker for failure-adaptive tier escalation.
+                If provided, success/failure will be recorded after phase execution.
         """
         self.config = config
-        self.model = model
+        self.model_selector = model_selector
         self.spec = spec
+        self.escalation_tracker = escalation_tracker
+
+        # Legacy attribute - kept for backward compat, subclasses should use _get_model_for_role
+        self.model = None
 
         # Create toolkit with spec access
         self.toolkit = HFSToolkit(spec=spec, triad_id=config.id)
@@ -78,9 +93,27 @@ class AgnoTriad(ABC):
         self.agents = self._create_agents()
         self.team = self._create_team()
 
+    def _get_model_for_role(self, role: str, phase: Optional[str] = None) -> Model:
+        """Get model for a specific agent role using ModelSelector.
+
+        Subclasses should call this method in _create_agents() to get
+        the appropriate model for each agent role.
+
+        Args:
+            role: Agent role name (e.g., "orchestrator", "worker_a")
+            phase: Optional phase name for phase-specific tier overrides
+
+        Returns:
+            Agno Model instance for the specified role
+        """
+        return self.model_selector.get_model(self.config.id, role, phase)
+
     @abstractmethod
     def _create_agents(self) -> Dict[str, Agent]:
         """Create the 3 agents for this triad type.
+
+        Subclasses should call self._get_model_for_role(role_name) to get
+        the appropriate model for each agent based on the ModelSelector.
 
         Returns:
             Dictionary mapping agent role names to Agent instances.
@@ -191,9 +224,19 @@ class AgnoTriad(ABC):
             # Run the team
             response = await self.team.arun(prompt)
 
+            # Record success for all agent roles if tracker exists
+            if self.escalation_tracker is not None:
+                for role in self.agents.keys():
+                    self.escalation_tracker.record_success(self.config.id, role)
+
             return response
 
         except Exception as e:
+            # Record failure if tracker exists
+            if self.escalation_tracker is not None:
+                # Record failure for team-level error
+                self.escalation_tracker.record_failure(self.config.id, "team")
+
             # Save partial progress before raising
             self._save_partial_progress(phase)
 
