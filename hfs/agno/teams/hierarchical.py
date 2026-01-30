@@ -10,17 +10,20 @@ Per CONTEXT.md decisions:
 - Session state for context (add_session_state_to_context=True)
 """
 
-from typing import Dict, Any, List, Callable
+from typing import TYPE_CHECKING, Dict, Any, List, Callable, Optional
 
 from agno.team import Team
 from agno.agent import Agent
-from agno.models.base import Model
 from agno.tools.toolkit import Toolkit
 
 from hfs.core.triad import TriadConfig, TriadOutput, NegotiationResponse
 from hfs.agno.tools import HFSToolkit
 from .base import AgnoTriad
 from .schemas import PhaseSummary
+
+if TYPE_CHECKING:
+    from hfs.core.model_selector import ModelSelector
+    from hfs.core.escalation_tracker import EscalationTracker
 
 
 class WorkerToolkit(Toolkit):
@@ -75,7 +78,7 @@ class HierarchicalAgnoTriad(AgnoTriad):
 
     Attributes:
         config: TriadConfig with id, preset, scope, budget, objectives
-        model: Agno Model instance for LLM calls
+        model_selector: ModelSelector for role-based model resolution
         spec: Shared Spec instance (warm wax)
         toolkit: HFSToolkit with full spec operation tools
         worker_toolkit: WorkerToolkit with limited tools (generate_code only)
@@ -86,8 +89,9 @@ class HierarchicalAgnoTriad(AgnoTriad):
     def __init__(
         self,
         config: TriadConfig,
-        model: Model,
+        model_selector: "ModelSelector",
         spec: "Any",  # Spec type, avoiding circular import
+        escalation_tracker: "Optional[EscalationTracker]" = None,
     ) -> None:
         """Initialize the hierarchical triad.
 
@@ -95,15 +99,18 @@ class HierarchicalAgnoTriad(AgnoTriad):
 
         Args:
             config: Configuration for this triad
-            model: Agno Model instance for LLM calls
+            model_selector: ModelSelector for role-based model resolution.
+                Models are obtained via _get_model_for_role() in _create_agents().
             spec: Shared Spec instance for claim/negotiation operations
+            escalation_tracker: Optional tracker for failure-adaptive tier escalation
         """
-        # Store spec early for worker toolkit creation
-        self._temp_spec = spec
-        self._temp_config = config
-
         # Call parent init (which creates toolkit, agents, team)
-        super().__init__(config, model, spec)
+        super().__init__(
+            config=config,
+            model_selector=model_selector,
+            spec=spec,
+            escalation_tracker=escalation_tracker,
+        )
 
     def _create_agents(self) -> Dict[str, Agent]:
         """Create orchestrator and two worker agents.
@@ -111,6 +118,9 @@ class HierarchicalAgnoTriad(AgnoTriad):
         Per CONTEXT.md:
         - Orchestrator: Full HFSToolkit access, coordinates work
         - Workers: Limited tools (generate_code only), execute subtasks
+
+        Each agent gets a model from _get_model_for_role() based on
+        the ModelSelector configuration.
 
         Returns:
             Dictionary with keys "orchestrator", "worker_a", "worker_b"
@@ -128,7 +138,7 @@ class HierarchicalAgnoTriad(AgnoTriad):
         orchestrator = Agent(
             name=f"{self.config.id}_orchestrator",
             role="Task coordinator and integrator",
-            model=self.model,
+            model=self._get_model_for_role("orchestrator"),
             tools=[self.toolkit],
             instructions=f"""You are the orchestrator of triad '{self.config.id}'.
 
@@ -161,7 +171,7 @@ have clear, actionable instructions. Always produce structured outputs.""",
         worker_a = Agent(
             name=f"{self.config.id}_worker_a",
             role="Subtask executor",
-            model=self.model,
+            model=self._get_model_for_role("worker_a"),
             tools=[worker_toolkit],
             instructions=f"""You are worker_a in triad '{self.config.id}'.
 
@@ -187,7 +197,7 @@ TOOL AVAILABLE:
         worker_b = Agent(
             name=f"{self.config.id}_worker_b",
             role="Subtask executor",
-            model=self.model,
+            model=self._get_model_for_role("worker_b"),
             tools=[worker_toolkit],
             instructions=f"""You are worker_b in triad '{self.config.id}'.
 
@@ -223,12 +233,14 @@ TOOL AVAILABLE:
         - share_member_interactions=True (orchestrator sees worker results)
         - add_session_state_to_context=True (pass state to prompts)
 
+        Team uses orchestrator's model for team-level operations.
+
         Returns:
             Configured Agno Team instance
         """
         return Team(
             name=f"triad_{self.config.id}",
-            model=self.model,
+            model=self._get_model_for_role("orchestrator"),  # Team uses orchestrator's model
             members=list(self.agents.values()),
             delegate_to_all_members=False,  # Orchestrator directs explicitly
             share_member_interactions=True,  # Orchestrator sees worker results
