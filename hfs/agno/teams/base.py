@@ -380,6 +380,61 @@ class AgnoTriad(ABC):
             tokens_prompt.add(prompt_tokens, labels)
             tokens_completion.add(completion_tokens, labels)
 
+    def _create_agent_span_context(
+        self,
+        role: str,
+        model_name: Optional[str] = None,
+        provider: Optional[str] = None,
+    ):
+        """Create context manager for agent-level spans.
+
+        Can be used by subclasses for finer-grained tracing if they
+        override execution methods to call agents individually.
+
+        Args:
+            role: Agent role name (orchestrator, worker_a, etc.)
+            model_name: Optional model name for the agent
+            provider: Optional provider name
+
+        Returns:
+            Context manager that creates agent span
+
+        Example:
+            with self._create_agent_span_context("orchestrator", "gpt-4", "openai"):
+                # Agent work here
+                pass
+        """
+        tracer = _get_tracer()
+        triad_duration, agent_duration, tokens_prompt, tokens_completion = _get_agent_metrics()
+
+        @contextmanager
+        def agent_span():
+            with tracer.start_as_current_span(f"hfs.agent.{role}") as span:
+                span.set_attribute("hfs.agent.role", role)
+                span.set_attribute("hfs.agent.triad_id", self.config.id)
+                if model_name:
+                    span.set_attribute("hfs.agent.model", model_name)
+                if provider:
+                    span.set_attribute("hfs.agent.provider", provider)
+
+                start = time.time()
+                try:
+                    yield span
+                    duration = time.time() - start
+                    span.set_attribute("hfs.agent.duration_s", duration)
+                    span.set_attribute("hfs.agent.success", True)
+                    agent_duration.record(duration, {"hfs.agent.role": role, "hfs.triad.id": self.config.id})
+                except Exception as e:
+                    duration = time.time() - start
+                    span.record_exception(e)
+                    span.set_status(Status(StatusCode.ERROR, str(e)))
+                    span.set_attribute("hfs.agent.success", False)
+                    span.set_attribute("hfs.agent.duration_s", duration)
+                    agent_duration.record(duration, {"hfs.agent.role": role, "hfs.triad.id": self.config.id})
+                    raise
+
+        return agent_span()
+
     def _save_partial_progress(self, phase: str) -> None:
         """Save session state to file for recovery.
 
