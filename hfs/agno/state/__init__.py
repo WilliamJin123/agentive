@@ -8,7 +8,7 @@ This module provides:
 State files live in .hfs/ to separate runtime from planning artifacts.
 """
 
-# Schemas (always available)
+# Schemas
 from .schemas import (
     WorkItem,
     WorkItemStatus,
@@ -21,6 +21,20 @@ from .schemas import (
     UpdateAgentMemoryOutput,
 )
 
+# Parser utilities
+from .parser import (
+    parse_work_item,
+    add_ip_marker,
+    remove_ip_marker,
+    mark_complete,
+    get_section_range,
+    extract_section,
+    WORK_ITEM_PATTERN,
+)
+
+# Manager
+from .manager import SharedStateManager
+
 __all__ = [
     # Schemas
     "WorkItem",
@@ -32,7 +46,14 @@ __all__ = [
     "AgentMemorySection",
     "UpdateAgentMemoryInput",
     "UpdateAgentMemoryOutput",
+    # Parser
+    "parse_work_item",
+    "add_ip_marker",
+    "remove_ip_marker",
+    "mark_complete",
+    "get_section_range",
+    "extract_section",
+    "WORK_ITEM_PATTERN",
+    # Manager
+    "SharedStateManager",
 ]
-
-# Parser utilities (added in Task 2)
-# Deferred imports to avoid circular dependencies during incremental development
