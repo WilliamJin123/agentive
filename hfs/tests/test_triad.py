@@ -11,6 +11,7 @@ This module tests:
 
 import pytest
 from typing import Dict, Any
+from unittest.mock import Mock, AsyncMock
 
 from hfs.core.triad import (
     TriadPreset,
@@ -31,15 +32,17 @@ from hfs.presets.dialectic import DialecticTriad
 from hfs.presets.consensus import ConsensusTriad
 
 
-class MockLLMClient:
-    """Simple mock LLM client for testing triad initialization."""
+def create_mock_llm_client():
+    """Create a mock LLM client for testing triad initialization."""
+    client = Mock()
+    client.calls = []
 
-    def __init__(self):
-        self.calls = []
-
-    async def create_message(self, **kwargs):
-        self.calls.append(kwargs)
+    async def mock_create_message(**kwargs):
+        client.calls.append(kwargs)
         return {"content": "Mock response"}
+
+    client.create_message = AsyncMock(side_effect=mock_create_message)
+    return client
 
 
 def create_test_config(
@@ -208,7 +211,7 @@ class TestTriadABC:
     def test_cannot_instantiate_directly(self):
         """Verify Triad ABC cannot be instantiated directly."""
         config = create_test_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         with pytest.raises(TypeError) as exc_info:
             Triad(config, llm)
@@ -240,7 +243,7 @@ class TestTriadFactory:
     def test_create_triad_hierarchical(self):
         """Verify factory creates HierarchicalTriad for hierarchical preset."""
         config = create_test_config(preset=TriadPreset.HIERARCHICAL)
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         triad = create_triad(config, llm)
 
@@ -251,7 +254,7 @@ class TestTriadFactory:
     def test_create_triad_dialectic(self):
         """Verify factory creates DialecticTriad for dialectic preset."""
         config = create_test_config(preset=TriadPreset.DIALECTIC)
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         triad = create_triad(config, llm)
 
@@ -261,7 +264,7 @@ class TestTriadFactory:
     def test_create_triad_consensus(self):
         """Verify factory creates ConsensusTriad for consensus preset."""
         config = create_test_config(preset=TriadPreset.CONSENSUS)
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         triad = create_triad(config, llm)
 
@@ -270,7 +273,7 @@ class TestTriadFactory:
 
     def test_create_triad_all_presets(self):
         """Verify factory works for all registered presets."""
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         for preset in TriadPreset:
             config = create_test_config(preset=preset)
@@ -305,7 +308,7 @@ class TestCreateTriadFromDict:
             "budget_time_ms": 20000,
             "objectives": ["performance"],
         }
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         triad = create_triad_from_dict(config_dict, llm)
 
@@ -315,7 +318,7 @@ class TestCreateTriadFromDict:
 
     def test_all_presets_from_dict(self):
         """Verify all preset strings work with dict config."""
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         for preset_str in ["hierarchical", "dialectic", "consensus"]:
             config_dict = {
@@ -344,7 +347,7 @@ class TestCreateTriadFromDict:
             "budget_time_ms": 5000,
             "objectives": [],
         }
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         with pytest.raises(ValueError) as exc_info:
             create_triad_from_dict(config_dict, llm)
@@ -355,7 +358,7 @@ class TestCreateTriadFromDict:
 
     def test_optional_system_context_in_dict(self):
         """Verify system_context is optional in dict config."""
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         # Without system_context
         config_no_context = {
@@ -451,7 +454,7 @@ class TestTriadInitialization:
     def test_hierarchical_agents_structure(self):
         """Verify HierarchicalTriad initializes correct agent structure."""
         config = create_test_config(preset=TriadPreset.HIERARCHICAL)
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         triad = create_triad(config, llm)
 
@@ -467,7 +470,7 @@ class TestTriadInitialization:
     def test_dialectic_agents_structure(self):
         """Verify DialecticTriad initializes correct agent structure."""
         config = create_test_config(preset=TriadPreset.DIALECTIC)
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         triad = create_triad(config, llm)
 
@@ -484,7 +487,7 @@ class TestTriadInitialization:
     def test_consensus_agents_structure(self):
         """Verify ConsensusTriad initializes correct agent structure."""
         config = create_test_config(preset=TriadPreset.CONSENSUS)
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         triad = create_triad(config, llm)
 
@@ -503,7 +506,7 @@ class TestTriadInitialization:
             triad_id="config_test",
             objectives=["test_objective"],
         )
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         for preset in TriadPreset:
             config.preset = preset
@@ -515,7 +518,7 @@ class TestTriadInitialization:
     def test_llm_client_is_stored(self):
         """Verify LLM client is stored and accessible on the triad."""
         config = create_test_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         for preset in TriadPreset:
             config.preset = preset
@@ -530,7 +533,7 @@ class TestTriadInitialization:
             objectives=["custom_objective"],
             scope_primary=["custom_scope"],
         )
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         for preset in TriadPreset:
             config.preset = preset

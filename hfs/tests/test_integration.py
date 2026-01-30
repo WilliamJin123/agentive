@@ -15,6 +15,7 @@ import pytest
 import asyncio
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
+from unittest.mock import Mock, AsyncMock
 
 from hfs.core.orchestrator import HFSOrchestrator, HFSResult, run_hfs
 from hfs.core.config import HFSConfig, load_config_dict, ConfigError
@@ -25,87 +26,61 @@ from hfs.integration.merger import MergedArtifact, CodeMerger
 from hfs.integration.validator import ValidationResult, Validator
 
 
-class MockLLMClient:
-    """Mock LLM client that returns sensible defaults for testing.
+def create_mock_llm_client(response_mode: str = "default"):
+    """Create a mock LLM client for testing.
 
-    This mock simulates an LLM client that can be used throughout the
-    HFS pipeline. It tracks calls for verification and returns
-    configurable responses based on the prompt content.
+    Args:
+        response_mode: "default", "cooperative", "stubborn", or "error"
     """
+    client = Mock()
+    client.call_history = []
+    client.response_count = 0
 
-    def __init__(self, response_mode: str = "default"):
-        """Initialize the mock LLM client.
-
-        Args:
-            response_mode: How to generate responses.
-                - "default": Return generic sensible responses
-                - "cooperative": Triads concede quickly
-                - "stubborn": Triads hold their positions
-                - "error": Simulate API errors
-        """
-        self.response_mode = response_mode
-        self.call_history: List[Dict[str, Any]] = []
-        self.response_count = 0
-
-    async def create_message(
-        self,
-        model: str = "claude-sonnet-4-20250514",
-        max_tokens: int = 1000,
-        messages: List[Dict[str, str]] = None,
-        system: str = None,
+    async def mock_create_message(
+        model="claude-sonnet-4-20250514",
+        max_tokens=1000,
+        messages=None,
+        system=None,
         **kwargs
-    ) -> Dict[str, Any]:
-        """Simulate LLM message creation.
-
-        Tracks the call and returns a mock response based on response_mode.
-        """
-        self.call_history.append({
+    ):
+        client.call_history.append({
             "model": model,
             "max_tokens": max_tokens,
             "messages": messages or [],
             "system": system,
             "kwargs": kwargs,
         })
-        self.response_count += 1
+        client.response_count += 1
 
-        if self.response_mode == "error":
+        if response_mode == "error":
             raise Exception("Mock API error")
 
-        # Return appropriate mock response
+        # Generate appropriate response based on context
+        context = str(messages) + str(system) if messages or system else ""
+
+        if "negotiate" in context.lower():
+            text = {"cooperative": "concede", "stubborn": "hold"}.get(response_mode, "revise")
+        elif "deliberate" in context.lower() or "proposal" in context.lower():
+            text = "Mock proposal content for testing"
+        elif "execute" in context.lower() or "generate" in context.lower():
+            text = "// Mock generated code\nexport const Component = () => <div>Test</div>;"
+        else:
+            text = "Mock LLM response"
+
         return {
-            "content": [{"text": self._generate_response(messages, system)}],
+            "content": [{"text": text}],
             "model": model,
             "usage": {"input_tokens": 100, "output_tokens": 50},
         }
 
-    def _generate_response(
-        self,
-        messages: Optional[List[Dict[str, str]]],
-        system: Optional[str]
-    ) -> str:
-        """Generate mock response based on context."""
-        # Analyze context to determine appropriate response
-        context = str(messages) + str(system) if messages or system else ""
+    client.create_message = AsyncMock(side_effect=mock_create_message)
 
-        if "negotiate" in context.lower():
-            if self.response_mode == "cooperative":
-                return "concede"
-            elif self.response_mode == "stubborn":
-                return "hold"
-            return "revise"
+    def reset():
+        client.call_history = []
+        client.response_count = 0
+    client.reset = reset
 
-        if "deliberate" in context.lower() or "proposal" in context.lower():
-            return "Mock proposal content for testing"
-
-        if "execute" in context.lower() or "generate" in context.lower():
-            return "// Mock generated code\nexport const Component = () => <div>Test</div>;"
-
-        return "Mock LLM response"
-
-    def reset(self):
-        """Reset call history and counters."""
-        self.call_history = []
-        self.response_count = 0
+    return client
 
 
 def create_minimal_config() -> Dict[str, Any]:
@@ -194,67 +169,13 @@ def create_complex_config() -> Dict[str, Any]:
     }
 
 
-class TestMockLLMClient:
-    """Tests for the MockLLMClient itself to ensure it works correctly."""
-
-    @pytest.mark.asyncio
-    async def test_default_response_mode(self):
-        """Verify default mode returns sensible responses."""
-        client = MockLLMClient(response_mode="default")
-
-        response = await client.create_message(
-            messages=[{"role": "user", "content": "Test message"}]
-        )
-
-        assert "content" in response
-        assert len(client.call_history) == 1
-        assert client.response_count == 1
-
-    @pytest.mark.asyncio
-    async def test_error_mode(self):
-        """Verify error mode raises exceptions."""
-        client = MockLLMClient(response_mode="error")
-
-        with pytest.raises(Exception) as exc_info:
-            await client.create_message()
-
-        assert "Mock API error" in str(exc_info.value)
-
-    @pytest.mark.asyncio
-    async def test_call_tracking(self):
-        """Verify call history is properly tracked."""
-        client = MockLLMClient()
-
-        await client.create_message(model="test-model", max_tokens=500)
-        await client.create_message(system="Test system prompt")
-
-        assert len(client.call_history) == 2
-        assert client.call_history[0]["model"] == "test-model"
-        assert client.call_history[0]["max_tokens"] == 500
-        assert client.call_history[1]["system"] == "Test system prompt"
-
-    @pytest.mark.asyncio
-    async def test_reset(self):
-        """Verify reset clears history."""
-        client = MockLLMClient()
-        await client.create_message()
-        await client.create_message()
-
-        assert client.response_count == 2
-
-        client.reset()
-
-        assert client.response_count == 0
-        assert len(client.call_history) == 0
-
-
 class TestOrchestratorInitialization:
     """Tests for HFSOrchestrator initialization."""
 
     def test_init_with_dict_config(self):
         """Verify orchestrator can be initialized with dict config."""
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
 
@@ -264,7 +185,7 @@ class TestOrchestratorInitialization:
 
     def test_init_requires_config(self):
         """Verify initialization fails without config."""
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         with pytest.raises(ValueError) as exc_info:
             HFSOrchestrator(llm_client=llm)
@@ -274,7 +195,7 @@ class TestOrchestratorInitialization:
     def test_init_creates_components(self):
         """Verify initialization creates all required components."""
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
 
@@ -287,7 +208,7 @@ class TestOrchestratorInitialization:
     def test_init_with_complex_config(self):
         """Verify orchestrator handles complex configurations."""
         config = create_complex_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
 
@@ -301,7 +222,7 @@ class TestOrchestratorComponents:
     def test_get_config(self):
         """Verify get_config() returns validated config."""
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         retrieved_config = orchestrator.get_config()
@@ -312,7 +233,7 @@ class TestOrchestratorComponents:
     def test_get_spec(self):
         """Verify get_spec() returns the spec object."""
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         spec = orchestrator.get_spec()
@@ -322,7 +243,7 @@ class TestOrchestratorComponents:
     def test_get_triad_before_run(self):
         """Verify get_triad() returns None before run()."""
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
 
@@ -336,7 +257,7 @@ class TestHFSPipelinePhases:
     async def test_spawn_triads_phase(self):
         """Verify triads are spawned correctly during run."""
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
 
@@ -358,7 +279,7 @@ class TestHFSPipelinePhases:
     async def test_initialize_spec_phase(self):
         """Verify spec is initialized with sections from config."""
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         orchestrator._initialize_spec()
@@ -372,7 +293,7 @@ class TestHFSPipelinePhases:
     async def test_build_spec_state(self):
         """Verify spec state is built correctly for triads."""
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         orchestrator._initialize_spec()
@@ -393,7 +314,7 @@ class TestFullPipelineRun:
     async def test_simple_run_completes(self):
         """Verify a simple pipeline run completes successfully."""
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         result = await orchestrator.run("Create a simple dashboard")
@@ -407,7 +328,7 @@ class TestFullPipelineRun:
     async def test_run_returns_all_result_fields(self):
         """Verify run() populates all expected result fields."""
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         result = await orchestrator.run("Create a dashboard")
@@ -423,7 +344,7 @@ class TestFullPipelineRun:
     async def test_run_executes_all_phases(self):
         """Verify all 9 phases are executed."""
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         result = await orchestrator.run("Create a dashboard")
@@ -440,7 +361,7 @@ class TestFullPipelineRun:
     async def test_run_with_complex_config(self):
         """Verify pipeline handles complex multi-triad configurations."""
         config = create_complex_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         result = await orchestrator.run("Create an accessible dashboard")
@@ -452,7 +373,7 @@ class TestFullPipelineRun:
     async def test_spec_is_frozen_after_run(self):
         """Verify spec is frozen after pipeline completes."""
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         result = await orchestrator.run("Create a dashboard")
@@ -464,7 +385,7 @@ class TestFullPipelineRun:
     async def test_triads_are_accessible_after_run(self):
         """Verify triads are accessible via get_triad() after run."""
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         await orchestrator.run("Create a dashboard")
@@ -481,7 +402,7 @@ class TestPipelineErrorHandling:
     async def test_run_handles_deliberation_errors(self):
         """Verify pipeline handles errors during deliberation gracefully."""
         config = create_minimal_config()
-        llm = MockLLMClient(response_mode="error")
+        llm = create_mock_llm_client(response_mode="error")
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
 
@@ -496,7 +417,7 @@ class TestPipelineErrorHandling:
     async def test_result_to_dict_serialization(self):
         """Verify HFSResult can be serialized to dict."""
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         result = await orchestrator.run("Create a dashboard")
@@ -544,7 +465,7 @@ class TestNegotiationPhase:
             "output": {"format": "react", "style_system": "tailwind"},
         }
 
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         result = await orchestrator.run("Test request")
 
@@ -613,7 +534,7 @@ class TestRunHFSConvenienceFunction:
         """Verify run_hfs convenience function works (via orchestrator)."""
         # Note: run_hfs requires a file path, so we test via orchestrator
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         result = await orchestrator.run("Create dashboard")
@@ -629,7 +550,7 @@ class TestEndToEndScenarios:
     async def test_dashboard_creation_scenario(self):
         """Simulate creating a dashboard from start to finish."""
         config = create_complex_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         result = await orchestrator.run(
@@ -673,7 +594,7 @@ class TestEndToEndScenarios:
             "output": {"format": "react", "style_system": "tailwind"},
         }
 
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         result = await orchestrator.run("Simple component")
 
@@ -684,7 +605,7 @@ class TestEndToEndScenarios:
     async def test_coverage_report_accuracy(self):
         """Verify coverage report reflects actual section states."""
         config = create_minimal_config()
-        llm = MockLLMClient()
+        llm = create_mock_llm_client()
 
         orchestrator = HFSOrchestrator(config_dict=config, llm_client=llm)
         result = await orchestrator.run("Test coverage")
