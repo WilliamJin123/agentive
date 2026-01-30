@@ -2,14 +2,21 @@
 
 This module provides the create_triad() function which instantiates
 the correct triad preset class based on the provided configuration.
+
+Use create_agno_triad() for ModelSelector-based triads (new API).
 """
 
 from typing import Any, Dict, Optional, Type
 
 from ..core.triad import Triad, TriadConfig, TriadPreset
+from ..core.model_selector import ModelSelector
+from ..core.escalation_tracker import EscalationTracker
 from .hierarchical import HierarchicalTriad
 from .dialectic import DialecticTriad
 from .consensus import ConsensusTriad
+from ..agno.teams.hierarchical import HierarchicalAgnoTriad
+from ..agno.teams.dialectic import DialecticAgnoTriad
+from ..agno.teams.consensus import ConsensusAgnoTriad
 
 
 # Registry mapping preset types to their implementing classes
@@ -17,6 +24,13 @@ TRIAD_REGISTRY: Dict[TriadPreset, Type[Triad]] = {
     TriadPreset.HIERARCHICAL: HierarchicalTriad,
     TriadPreset.DIALECTIC: DialecticTriad,
     TriadPreset.CONSENSUS: ConsensusTriad,
+}
+
+# Registry mapping preset types to Agno-based triad classes
+AGNO_TRIAD_REGISTRY: Dict[TriadPreset, Type] = {
+    TriadPreset.HIERARCHICAL: HierarchicalAgnoTriad,
+    TriadPreset.DIALECTIC: DialecticAgnoTriad,
+    TriadPreset.CONSENSUS: ConsensusAgnoTriad,
 }
 
 
@@ -64,6 +78,50 @@ def create_triad(config: TriadConfig, llm_client: Any) -> Triad:
 
     triad_class = TRIAD_REGISTRY[preset]
     return triad_class(config, llm_client)
+
+
+def create_agno_triad(
+    config: TriadConfig,
+    model_selector: ModelSelector,
+    spec: Any,
+    escalation_tracker: Optional[EscalationTracker] = None,
+) -> Any:  # Returns AgnoTriad but avoiding circular import
+    """Create an Agno-based triad instance with ModelSelector.
+
+    Factory function for the new ModelSelector-based API. Uses
+    AGNO_TRIAD_REGISTRY to instantiate the correct AgnoTriad subclass.
+
+    Note: This is a SEPARATE API from create_triad() which uses the
+    legacy single-model approach. Use this for new code.
+
+    Args:
+        config: TriadConfig specifying the preset type and settings
+        model_selector: ModelSelector for role-based model resolution
+        spec: Shared Spec instance for claim/negotiation operations
+        escalation_tracker: Optional tracker for failure-adaptive escalation
+
+    Returns:
+        An instance of the appropriate AgnoTriad subclass
+
+    Raises:
+        ValueError: If the preset type is not recognized
+    """
+    preset = config.preset
+
+    if preset not in AGNO_TRIAD_REGISTRY:
+        valid_presets = [p.value for p in TriadPreset]
+        raise ValueError(
+            f"Unknown triad preset: {preset}. "
+            f"Valid presets are: {valid_presets}"
+        )
+
+    triad_class = AGNO_TRIAD_REGISTRY[preset]
+    return triad_class(
+        config=config,
+        model_selector=model_selector,
+        spec=spec,
+        escalation_tracker=escalation_tracker,
+    )
 
 
 def create_triad_from_dict(config_dict: Dict[str, Any], llm_client: Any) -> Triad:
