@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Agno Tools** - HFS-specific tools as Agno @tool decorators
 - [x] **Phase 3: Agno Teams** - Triads implemented as Agno Teams with async execution
 - [x] **Phase 4: Shared State** - Markdown-based coordination layer with async locking
-- [ ] **Phase 5: Model Tiers** - Role-based model selection with adaptive escalation
+- [x] **Phase 5: Model Tiers** - Role-based model selection with adaptive escalation
 - [ ] **Phase 6: Observability** - OpenTelemetry tracing and usage metrics
 - [ ] **Phase 7: Cleanup** - Remove MockLLMClient, require real API keys
 
@@ -102,7 +102,7 @@ Plans:
 - [x] 05-03-PLAN.md - EscalationTracker with permanent config updates
 - [x] 05-04-PLAN.md - Wire ModelSelector/EscalationTracker into AgnoTriad base class (gap closure)
 - [x] 05-05-PLAN.md - Update AgnoTriad subclasses to use ModelSelector (gap closure)
-- [ ] 05-06-PLAN.md - Wire ModelSelector/EscalationTracker into HFSOrchestrator (gap closure)
+- [x] 05-06-PLAN.md - Wire ModelSelector/EscalationTracker into HFSOrchestrator (gap closure)
 
 ### Phase 6: Observability
 **Goal**: Full visibility into agent runs, token usage, and phase timing
@@ -143,6 +143,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Agno Tools | 1/1 | Complete | 2026-01-29 |
 | 3. Agno Teams | 4/4 | Complete | 2026-01-29 |
 | 4. Shared State | 2/2 | Complete | 2026-01-30 |
-| 5. Model Tiers | 5/6 | In progress | - |
+| 5. Model Tiers | 6/6 | Complete | 2026-01-30 |
 | 6. Observability | 0/2 | Not started | - |
 | 7. Cleanup | 0/1 | Not started | - |

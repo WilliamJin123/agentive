@@ -21,10 +21,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Model Configuration
 
-- [ ] **MODL-01**: Role-based model tiers configurable in YAML (orchestrator, worker, arbiter defaults)
-- [ ] **MODL-02**: Phase-based model selection (deliberation, negotiation, execution can use different tiers)
-- [ ] **MODL-03**: Code execution always uses high-quality models (GLM-4.7, OSS-120b via Cerebras)
-- [ ] **MODL-04**: Adaptive model escalation when execution fails (auto-upgrade to better tier)
+- [x] **MODL-01**: Role-based model tiers configurable in YAML (orchestrator, worker, arbiter defaults)
+- [x] **MODL-02**: Phase-based model selection (deliberation, negotiation, execution can use different tiers)
+- [x] **MODL-03**: Code execution always uses high-quality models (GLM-4.7, OSS-120b via Cerebras)
+- [x] **MODL-04**: Adaptive model escalation when execution fails (auto-upgrade to better tier)
 
 ### Observability
 
@@ -75,14 +75,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AGNO-01 | Phase 3 | Complete |
 | AGNO-03 | Phase 3 | Complete |
 | AGNO-04 | Phase 3 | Complete |
-| MODL-01 | Phase 4 | Pending |
-| MODL-02 | Phase 4 | Pending |
-| MODL-03 | Phase 4 | Pending |
-| MODL-04 | Phase 4 | Pending |
-| OBSV-01 | Phase 5 | Pending |
-| OBSV-02 | Phase 5 | Pending |
-| OBSV-03 | Phase 5 | Pending |
-| CLEN-01 | Phase 6 | Pending |
+| MODL-01 | Phase 5 | Complete |
+| MODL-02 | Phase 5 | Complete |
+| MODL-03 | Phase 5 | Complete |
+| MODL-04 | Phase 5 | Complete |
+| OBSV-01 | Phase 6 | Pending |
+| OBSV-02 | Phase 6 | Pending |
+| OBSV-03 | Phase 6 | Pending |
+| CLEN-01 | Phase 7 | Pending |
 
 **Coverage:**
 - v1 requirements: 14 total
@@ -91,4 +91,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-29*
-*Last updated: 2026-01-29 after Phase 3 completion*
+*Last updated: 2026-01-30 after Phase 5 completion*
