@@ -113,11 +113,12 @@ Plans:
   2. Token usage tracked and reported per agent, phase, and run
   3. Phase timing metrics captured for all 9 HFS pipeline phases
   4. Trace data viewable via configured backend (TiDB or file)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 06-01: OpenTelemetry tracing setup
-- [ ] 06-02: Token and timing metrics
+- [ ] 06-01-PLAN.md - OpenTelemetry foundation (TracerProvider, MeterProvider, config)
+- [ ] 06-02-PLAN.md - Orchestrator instrumentation (9 phase spans)
+- [ ] 06-03-PLAN.md - Agent instrumentation (triad/agent spans, token tracking)
 
 ### Phase 7: Cleanup
 **Goal**: MockLLMClient removed, HFS requires real API keys to run
@@ -144,5 +145,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 3. Agno Teams | 4/4 | Complete | 2026-01-29 |
 | 4. Shared State | 2/2 | Complete | 2026-01-30 |
 | 5. Model Tiers | 6/6 | Complete | 2026-01-30 |
-| 6. Observability | 0/2 | Not started | - |
+| 6. Observability | 0/3 | Planned | - |
 | 7. Cleanup | 0/1 | Not started | - |
