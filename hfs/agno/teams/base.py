@@ -22,13 +22,13 @@ from agno.agent import Agent
 from agno.models.base import Model
 
 from hfs.core.triad import TriadConfig, TriadOutput, NegotiationResponse
-from hfs.core.model_selector import ModelSelector
-from hfs.core.escalation_tracker import EscalationTracker
 from hfs.agno.tools import HFSToolkit
 from .schemas import PhaseSummary, TriadSessionState, TriadExecutionError
 
 if TYPE_CHECKING:
     from hfs.core.spec import Spec
+    from hfs.core.model_selector import ModelSelector
+    from hfs.core.escalation_tracker import EscalationTracker
 
 
 class AgnoTriad(ABC):
@@ -60,9 +60,9 @@ class AgnoTriad(ABC):
     def __init__(
         self,
         config: TriadConfig,
-        model_selector: ModelSelector,
+        model_selector: "ModelSelector",
         spec: "Spec",
-        escalation_tracker: Optional[EscalationTracker] = None,
+        escalation_tracker: Optional["EscalationTracker"] = None,
     ) -> None:
         """Initialize the Agno-based triad.
 
