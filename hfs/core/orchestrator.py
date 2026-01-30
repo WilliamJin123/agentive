@@ -23,10 +23,14 @@ from typing import Any, Dict, List, Optional, Union
 from .arbiter import Arbiter, ArbiterConfig
 from .config import HFSConfig, load_config, load_config_dict
 from .emergent import EmergentObserver, EmergentReport
+from .escalation_tracker import EscalationTracker
+from .model_selector import ModelSelector
+from .model_tiers import ModelTiersConfig
 from .negotiation import NegotiationEngine, NegotiationResult
 from .spec import Spec
 from .triad import Triad, TriadConfig, TriadPreset, TriadOutput
-from ..presets.triad_factory import create_triad
+from ..agno.providers import ProviderManager
+from ..presets.triad_factory import create_triad, create_agno_triad
 from ..integration.merger import CodeMerger, MergedArtifact
 from ..integration.validator import Validator, ValidationResult
 
@@ -145,7 +149,9 @@ class HFSOrchestrator:
         self,
         config_path: Optional[Union[str, Path]] = None,
         config_dict: Optional[Dict[str, Any]] = None,
-        llm_client: Any = None
+        llm_client: Any = None,
+        model_selector: Optional[ModelSelector] = None,
+        escalation_tracker: Optional[EscalationTracker] = None,
     ) -> None:
         """Initialize the HFS Orchestrator.
 
@@ -156,6 +162,12 @@ class HFSOrchestrator:
             config_dict: Configuration as a dictionary (alternative to file).
             llm_client: The LLM client for agent interactions. Must support
                 async message creation (e.g., Anthropic, OpenAI clients).
+            model_selector: Optional ModelSelector for role-based model resolution.
+                If not provided but config has model_tiers section, one will be
+                created automatically during run().
+            escalation_tracker: Optional EscalationTracker for failure-adaptive
+                tier escalation. If not provided but model_selector is available,
+                one will be created automatically during run().
 
         Raises:
             ValueError: If neither config_path nor config_dict is provided.
@@ -167,13 +179,17 @@ class HFSOrchestrator:
         # Load configuration
         if config_path is not None:
             self.config = load_config(config_path)
+            self._config_path: Optional[Path] = Path(config_path)
         else:
             self.config = load_config_dict(config_dict)
+            self._config_path = None
 
         self.llm = llm_client
+        self.model_selector = model_selector
+        self.escalation_tracker = escalation_tracker
 
         # Initialize components (triads are spawned in run())
-        self.triads: Dict[str, Triad] = {}
+        self.triads: Dict[str, Union[Triad, Any]] = {}
         self.spec = Spec()
 
         # Initialize arbiter with config
