@@ -10,6 +10,7 @@
 # - sections: Territory definitions
 # - arbiter: Conflict resolution settings
 # - output: Code generation settings
+# - model_tiers: Role-based model selection with adaptive escalation
 
 config:
 
@@ -98,3 +99,57 @@ config:
 
     # Include full negotiation history in output
     include_negotiation_log: false
+
+  # ============================================================
+  # MODEL TIERS - Role-based model selection with adaptive escalation
+  # ============================================================
+  model_tiers:
+    # Tier definitions with provider-specific model IDs
+    tiers:
+      reasoning:
+        description: "Highest capability for complex orchestration"
+        providers:
+          cerebras: "qwen-3-235b-a22b-instruct-2507"
+          groq: "moonshotai/kimi-k2-instruct"
+          gemini: "gemini-2.5-flash"
+          openrouter: "anthropic/claude-sonnet-4"
+      general:
+        description: "Balanced capability for workers"
+        providers:
+          cerebras: "llama-3.3-70b"
+          groq: "llama-3.3-70b-versatile"
+          gemini: "gemini-2.5-flash-lite"
+          openrouter: "meta-llama/llama-3.3-70b-instruct:free"
+      fast:
+        description: "Speed-optimized for code execution"
+        providers:
+          cerebras: "zai-glm-4.7"
+          groq: "openai/gpt-oss-120b"
+          gemini: "gemma-3-27b-it"
+          openrouter: "meta-llama/llama-3.3-70b-instruct:free"
+
+    # Role-to-tier defaults
+    role_defaults:
+      # Hierarchical triad
+      orchestrator: "reasoning"
+      worker_a: "general"
+      worker_b: "general"
+      # Dialectic triad
+      proposer: "general"
+      critic: "general"
+      synthesizer: "reasoning"
+      # Consensus triad
+      peer_1: "general"
+      peer_2: "general"
+      peer_3: "general"
+      # Special case - always fast tier
+      code_execution: "fast"
+
+    # Phase overrides (execution phase uses faster models)
+    phase_overrides:
+      execution:
+        worker_a: "fast"
+        worker_b: "fast"
+
+    # Escalation state (system-managed, initially empty)
+    escalation_state: {}
