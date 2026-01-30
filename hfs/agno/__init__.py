@@ -33,6 +33,7 @@ from .models import (
 )
 from .tools import HFSToolkit
 from .teams import AgnoTriad, PhaseSummary, TriadSessionState, TriadExecutionError
+from .state import SharedStateManager, SharedStateToolkit, WorkItem
 
 __all__ = [
     # Core
@@ -56,4 +57,8 @@ __all__ = [
     "PhaseSummary",
     "TriadSessionState",
     "TriadExecutionError",
+    # State
+    "SharedStateManager",
+    "SharedStateToolkit",
+    "WorkItem",
 ]
