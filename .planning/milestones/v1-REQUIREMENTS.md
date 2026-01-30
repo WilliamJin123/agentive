@@ -1,3 +1,13 @@
+# Requirements Archive: v1 Agno + Keycycle Integration
+
+**Archived:** 2026-01-30
+**Status:** SHIPPED
+
+This is the archived requirements specification for v1.
+For current requirements, see `.planning/REQUIREMENTS.md` (created for next milestone).
+
+---
+
 # Requirements: Agno + Keycycle Integration
 
 **Defined:** 2026-01-29
@@ -90,5 +100,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 - Unmapped: 0
 
 ---
-*Requirements defined: 2026-01-29*
-*Last updated: 2026-01-30 after Phase 7 completion (milestone complete)*
+
+## Milestone Summary
+
+**Shipped:** 14 of 14 v1 requirements
+**Adjusted:** None
+**Dropped:** None
+
+---
+*Archived: 2026-01-30 as part of v1 milestone completion*
