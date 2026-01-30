@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Agno Teams** - Triads implemented as Agno Teams with async execution
 - [x] **Phase 4: Shared State** - Markdown-based coordination layer with async locking
 - [x] **Phase 5: Model Tiers** - Role-based model selection with adaptive escalation
-- [ ] **Phase 6: Observability** - OpenTelemetry tracing and usage metrics
+- [x] **Phase 6: Observability** - OpenTelemetry tracing and usage metrics
 - [ ] **Phase 7: Cleanup** - Remove MockLLMClient, require real API keys
 
 ## Phase Details
@@ -116,9 +116,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 06-01-PLAN.md - OpenTelemetry foundation (TracerProvider, MeterProvider, config)
-- [ ] 06-02-PLAN.md - Orchestrator instrumentation (9 phase spans)
-- [ ] 06-03-PLAN.md - Agent instrumentation (triad/agent spans, token tracking)
+- [x] 06-01-PLAN.md - OpenTelemetry foundation (TracerProvider, MeterProvider, config)
+- [x] 06-02-PLAN.md - Orchestrator instrumentation (9 phase spans)
+- [x] 06-03-PLAN.md - Agent instrumentation (triad/agent spans, token tracking)
 
 ### Phase 7: Cleanup
 **Goal**: MockLLMClient removed, HFS requires real API keys to run
@@ -145,5 +145,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 3. Agno Teams | 4/4 | Complete | 2026-01-29 |
 | 4. Shared State | 2/2 | Complete | 2026-01-30 |
 | 5. Model Tiers | 6/6 | Complete | 2026-01-30 |
-| 6. Observability | 0/3 | Planned | - |
+| 6. Observability | 3/3 | Complete | 2026-01-30 |
 | 7. Cleanup | 0/1 | Not started | - |

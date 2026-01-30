@@ -28,9 +28,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Observability
 
-- [ ] **OBSV-01**: OpenTelemetry tracing integrated for agent runs and tool executions
-- [ ] **OBSV-02**: Token usage tracked per agent, phase, and run
-- [ ] **OBSV-03**: Phase timing metrics captured for HFS pipeline phases
+- [x] **OBSV-01**: OpenTelemetry tracing integrated for agent runs and tool executions
+- [x] **OBSV-02**: Token usage tracked per agent, phase, and run
+- [x] **OBSV-03**: Phase timing metrics captured for HFS pipeline phases
 
 ### Cleanup
 
@@ -79,9 +79,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MODL-02 | Phase 5 | Complete |
 | MODL-03 | Phase 5 | Complete |
 | MODL-04 | Phase 5 | Complete |
-| OBSV-01 | Phase 6 | Pending |
-| OBSV-02 | Phase 6 | Pending |
-| OBSV-03 | Phase 6 | Pending |
+| OBSV-01 | Phase 6 | Complete |
+| OBSV-02 | Phase 6 | Complete |
+| OBSV-03 | Phase 6 | Complete |
 | CLEN-01 | Phase 7 | Pending |
 
 **Coverage:**
@@ -91,4 +91,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-29*
-*Last updated: 2026-01-30 after Phase 5 completion*
+*Last updated: 2026-01-30 after Phase 6 completion*
