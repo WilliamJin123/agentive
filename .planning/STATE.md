@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 ## Current Position
 
 Phase: 5 of 7 (Model Tiers)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-01-30 - Completed 05-03-PLAN.md
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-01-30 - Completed 05-02-PLAN.md
 
-Progress: [#########-] 92%
+Progress: [##########] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 12
 - Average duration: 5 min
-- Total execution time: 58 min
+- Total execution time: 61 min
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: [#########-] 92%
 | 2 | 1/1 | 5 min | 5 min |
 | 3 | 4/4 | 27 min | 7 min |
 | 4 | 2/2 | 8 min | 4 min |
-| 5 | 2/3 | 6 min | 3 min |
+| 5 | 3/3 | 9 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-04 (7 min), 04-01 (5 min), 04-02 (3 min), 05-01 (2 min), 05-03 (4 min)
+- Last 5 plans: 04-01 (5 min), 04-02 (3 min), 05-01 (2 min), 05-02 (3 min), 05-03 (4 min)
 - Trend: Stable, improving
 
 *Updated after each plan completion*
@@ -82,6 +82,8 @@ Recent decisions affecting current work:
 | 05-01 | TierName = Literal['reasoning', 'general', 'fast'] | Pydantic validates tier names at parse time |
 | 05-01 | model_validator for required tiers | Fail fast if config missing required tiers |
 | 05-01 | escalation_state uses string keys | "triad_id:role" pattern for flexibility |
+| 05-02 | Unknown role fallback to 'general' tier | Safe default for roles not explicitly mapped |
+| 05-02 | Escalation key format "triad_id:role" | Matches escalation_state design from 05-01 |
 | 05-03 | Failure count resets on escalation and success | Fresh tracking after tier change or success |
 | 05-03 | Escalation state priority over role defaults | Check escalation_state before role_defaults |
 | 05-03 | YAML round-trip with ruamel.yaml preserve_quotes | Maintains config file formatting and comments |
@@ -100,7 +102,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-30T03:04:00Z
-Stopped at: Completed 05-03-PLAN.md
+Last session: 2026-01-30T02:48:01Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
-Next: 05-02 - ModelSelector implementation
+Next: Phase 5 complete - all 3 plans done
