@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-29)
 
 **Core value:** Real LLM-powered multi-agent negotiation with automatic key rotation and failure-adaptive model escalation
-**Current focus:** Phase 4 - Shared State (COMPLETE)
+**Current focus:** Phase 5 - Model Tiers (In progress)
 
 ## Current Position
 
-Phase: 4 of 7 (Shared State)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-01-30 - Completed 04-02-PLAN.md
+Phase: 5 of 7 (Model Tiers)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-30 - Completed 05-01-PLAN.md
 
-Progress: [########--] 82%
+Progress: [########--] 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: 6 min
-- Total execution time: 52 min
+- Total plans completed: 10
+- Average duration: 5 min
+- Total execution time: 54 min
 
 **By Phase:**
 
@@ -31,10 +31,11 @@ Progress: [########--] 82%
 | 2 | 1/1 | 5 min | 5 min |
 | 3 | 4/4 | 27 min | 7 min |
 | 4 | 2/2 | 8 min | 4 min |
+| 5 | 1/3 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-02 (8 min), 03-03 (5 min), 03-04 (7 min), 04-01 (5 min), 04-02 (3 min)
-- Trend: Stable
+- Last 5 plans: 03-03 (5 min), 03-04 (7 min), 04-01 (5 min), 04-02 (3 min), 05-01 (2 min)
+- Trend: Stable, improving
 
 *Updated after each plan completion*
 
@@ -78,6 +79,9 @@ Recent decisions affecting current work:
 | 04-02 | Async-to-sync wrapper via ThreadPoolExecutor | Agno tools are sync but manager uses async I/O |
 | 04-02 | Agent ID injected at toolkit construction | Tools operate on behalf of specific agent |
 | 04-02 | Error formatting via hfs.agno.tools.errors | Consistent with HFSToolkit pattern |
+| 05-01 | TierName = Literal['reasoning', 'general', 'fast'] | Pydantic validates tier names at parse time |
+| 05-01 | model_validator for required tiers | Fail fast if config missing required tiers |
+| 05-01 | escalation_state uses string keys | "triad_id:role" pattern for flexibility |
 
 ### Pending Todos
 
@@ -93,7 +97,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-30T00:34:44Z
-Stopped at: Completed 04-02-PLAN.md (Phase 4 complete)
+Last session: 2026-01-30T02:41:52Z
+Stopped at: Completed 05-01-PLAN.md
 Resume file: None
-Next: Phase 5 - Orchestration
+Next: 05-02 - ModelSelector implementation
