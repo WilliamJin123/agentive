@@ -94,12 +94,12 @@ Plans:
   2. Phase-specific model overrides work (execution phase can use different tier)
   3. Code execution always uses Cerebras GLM-4.7 or OSS-120b
   4. Failed executions over time causes self-improvement to shift to better models
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: YAML model tier configuration
-- [ ] 05-02: Phase-based model selection
-- [ ] 05-03: Adaptive escalation on failure
+- [ ] 05-01-PLAN.md - Pydantic config models and YAML tier schema
+- [ ] 05-02-PLAN.md - ModelSelector with tier resolution and provider fallback
+- [ ] 05-03-PLAN.md - EscalationTracker with permanent config updates
 
 ### Phase 6: Observability
 **Goal**: Full visibility into agent runs, token usage, and phase timing
