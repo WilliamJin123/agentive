@@ -16,6 +16,8 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from hfs.agno import get_provider_manager, list_available_providers
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -146,6 +148,49 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def check_providers_or_exit() -> Any:
+    """Check API key configuration and exit with helpful message if missing.
+
+    Returns:
+        ProviderManager instance if providers available
+
+    Exits:
+        With code 1 if no providers are configured
+    """
+    try:
+        manager = get_provider_manager()
+        available = manager.available_providers
+        status = manager.environment_status
+
+        if not available:
+            print("Error: No API keys configured.", file=sys.stderr)
+            print()
+            print("HFS requires at least one LLM provider to be configured.")
+            print("Set up API keys using environment variables:")
+            print()
+            for provider, info in status.items():
+                configured = "OK" if info["configured"] else "MISSING"
+                print(f"  {provider.upper()}: {configured}")
+                if not info["configured"]:
+                    print(f"    Set NUM_{provider.upper()} and {provider.upper()}_API_KEY_1..N")
+            print()
+            print("Example for Cerebras:")
+            print("  export NUM_CEREBRAS=1")
+            print("  export CEREBRAS_API_KEY_1=your-api-key")
+            print()
+            print("Run 'hfs list-presets' or 'hfs validate-config' to test CLI without API keys.")
+            sys.exit(1)
+
+        # Log available providers
+        logger.info(f"Available providers: {', '.join(available)}")
+        return manager
+
+    except Exception as e:
+        print(f"Error: Failed to initialize providers: {e}", file=sys.stderr)
+        logger.exception("Provider initialization failed")
+        sys.exit(1)
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     """Execute the run command.
 
@@ -185,15 +230,17 @@ def cmd_run(args: argparse.Namespace) -> int:
         print(f"  Output directory: {output_dir}")
         return 0
 
+    # Check for API keys (only for non-dry-run)
+    manager = check_providers_or_exit()
+
     # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Create orchestrator and run pipeline
-    # Note: llm_client will be handled in Plan 02 with proper API key checks
     try:
         orchestrator = HFSOrchestrator(
             config_path=config_path,
-            llm_client=None
+            llm_client=None  # AgnoTriad uses ProviderManager directly
         )
 
         print(f"\nRunning HFS pipeline...")
