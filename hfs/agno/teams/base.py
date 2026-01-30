@@ -105,6 +105,15 @@ class AgnoTriad(ABC):
 
         Returns:
             Agno Model instance for the specified role
+
+        Note:
+            The phase parameter currently only applies at triad instantiation time
+            (when _create_agents is called), NOT at execution runtime. This is because
+            Agno agents are created once with their model assignment and cannot be
+            dynamically swapped during execution. For execution-phase specific models,
+            use the "code_execution" role in role_defaults and call this method with
+            role="code_execution" when creating agents that run during execution phase.
+            Dynamic phase-based model swapping is planned for a future release.
         """
         return self.model_selector.get_model(self.config.id, role, phase)
 
