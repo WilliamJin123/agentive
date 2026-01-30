@@ -12,17 +12,20 @@ Per CONTEXT.md decisions:
 - Structured template for summaries
 """
 
-from typing import Dict, Any, Optional, List
+from typing import TYPE_CHECKING, Dict, Any, Optional, List
 import re
 
 from agno.team import Team
 from agno.agent import Agent
-from agno.models.base import Model
 
 from hfs.core.triad import TriadConfig, TriadOutput, NegotiationResponse
 from hfs.agno.tools import HFSToolkit
 from .base import AgnoTriad
 from .schemas import PhaseSummary
+
+if TYPE_CHECKING:
+    from hfs.core.model_selector import ModelSelector
+    from hfs.core.escalation_tracker import EscalationTracker
 
 
 class DialecticAgnoTriad(AgnoTriad):
@@ -40,12 +43,35 @@ class DialecticAgnoTriad(AgnoTriad):
 
     Attributes:
         config: TriadConfig with id, preset, scope, budget, objectives
-        model: Agno Model instance for LLM calls
+        model_selector: ModelSelector for role-based model resolution
         spec: Shared Spec instance (warm wax)
         toolkit: HFSToolkit with spec operation tools
         agents: Dict of agent role -> Agent instance
         team: Agno Team instance
     """
+
+    def __init__(
+        self,
+        config: TriadConfig,
+        model_selector: "ModelSelector",
+        spec: "Any",  # Spec type, avoiding circular import
+        escalation_tracker: "Optional[EscalationTracker]" = None,
+    ) -> None:
+        """Initialize the dialectic triad.
+
+        Args:
+            config: Configuration for this triad
+            model_selector: ModelSelector for role-based model resolution.
+                Models are obtained via _get_model_for_role() in _create_agents().
+            spec: Shared Spec instance for claim/negotiation operations
+            escalation_tracker: Optional tracker for failure-adaptive tier escalation
+        """
+        super().__init__(
+            config=config,
+            model_selector=model_selector,
+            spec=spec,
+            escalation_tracker=escalation_tracker,
+        )
 
     def _create_agents(self) -> Dict[str, Agent]:
         """Create proposer, critic, and synthesizer agents.
@@ -54,6 +80,9 @@ class DialecticAgnoTriad(AgnoTriad):
         - Proposer: Can register claims
         - Critic: Read-only state access
         - Synthesizer: Full toolkit for final decisions
+
+        Each agent gets a model from _get_model_for_role() based on
+        the ModelSelector configuration.
 
         Returns:
             Dictionary with keys "proposer", "critic", "synthesizer"
@@ -66,7 +95,7 @@ class DialecticAgnoTriad(AgnoTriad):
         # Tools: register_claim, get_current_claims
         proposer = Agent(
             name=f"proposer_{self.config.id}",
-            model=self.model,
+            model=self._get_model_for_role("proposer"),
             role="Creative proposal generator (thesis)",
             instructions=f"""You are the proposer in triad '{self.config.id}'.
 Your objectives: {objectives_str}
@@ -91,7 +120,7 @@ Use register_claim to claim sections and get_current_claims to see the state."""
         # Tools: get_negotiation_state, get_current_claims (read-only)
         critic = Agent(
             name=f"critic_{self.config.id}",
-            model=self.model,
+            model=self._get_model_for_role("critic"),
             role="Proposal challenger (antithesis)",
             instructions=f"""You are the critic in triad '{self.config.id}'.
 Your objectives: {objectives_str}
@@ -117,7 +146,7 @@ Use get_negotiation_state and get_current_claims to understand the current state
         # Critical: Synthesizer produces phase summaries per CONTEXT.md
         synthesizer = Agent(
             name=f"synthesizer_{self.config.id}",
-            model=self.model,
+            model=self._get_model_for_role("synthesizer"),
             role="Tension resolver (synthesis)",
             instructions=f"""You are the synthesizer in triad '{self.config.id}'.
 Your objectives: {objectives_str}
@@ -165,12 +194,14 @@ You have full access to all tools.""",
         - share_member_interactions=True so all see prior contributions
         - Session state for phase summaries
 
+        Team uses synthesizer's model for team-level operations.
+
         Returns:
             Agno Team configured for dialectic deliberation
         """
         return Team(
             name=f"triad_{self.config.id}",
-            model=self.model,
+            model=self._get_model_for_role("synthesizer"),  # Team uses synthesizer's model
             members=list(self.agents.values()),
             delegate_to_all_members=False,  # Explicit thesis->antithesis->synthesis flow
             share_member_interactions=True,  # All see prior contributions
