@@ -168,6 +168,8 @@ class ModelSelector:
         raise NoAvailableKeyError(
             provider="all",
             model_id=tier,
+            wait=True,
+            timeout=10.0,
             total_keys=0,
             cooling_down=0,
         )
