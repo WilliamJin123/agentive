@@ -14,17 +14,20 @@ Per CONTEXT.md decisions:
 - All peers equal authority with full tool access
 """
 
-from typing import Dict, Any, Optional, List
+from typing import TYPE_CHECKING, Dict, Any, Optional, List
 import re
 
 from agno.team import Team
 from agno.agent import Agent
-from agno.models.base import Model
 
 from hfs.core.triad import TriadConfig, TriadOutput, NegotiationResponse
 from hfs.agno.tools import HFSToolkit
 from .base import AgnoTriad
 from .schemas import PhaseSummary
+
+if TYPE_CHECKING:
+    from hfs.core.model_selector import ModelSelector
+    from hfs.core.escalation_tracker import EscalationTracker
 
 
 class ConsensusAgnoTriad(AgnoTriad):
@@ -45,7 +48,7 @@ class ConsensusAgnoTriad(AgnoTriad):
 
     Attributes:
         config: TriadConfig with id, preset, scope, budget, objectives
-        model: Agno Model instance for LLM calls
+        model_selector: ModelSelector for role-based model resolution
         spec: Shared Spec instance (warm wax)
         toolkit: HFSToolkit with spec operation tools
         agents: Dict of agent role -> Agent instance
@@ -59,11 +62,37 @@ class ConsensusAgnoTriad(AgnoTriad):
         "maintainability",      # Focus on long-term maintainability
     ]
 
+    def __init__(
+        self,
+        config: TriadConfig,
+        model_selector: "ModelSelector",
+        spec: "Any",  # Spec type, avoiding circular import
+        escalation_tracker: "Optional[EscalationTracker]" = None,
+    ) -> None:
+        """Initialize the consensus triad.
+
+        Args:
+            config: Configuration for this triad
+            model_selector: ModelSelector for role-based model resolution.
+                Models are obtained via _get_model_for_role() in _create_agents().
+            spec: Shared Spec instance for claim/negotiation operations
+            escalation_tracker: Optional tracker for failure-adaptive tier escalation
+        """
+        super().__init__(
+            config=config,
+            model_selector=model_selector,
+            spec=spec,
+            escalation_tracker=escalation_tracker,
+        )
+
     def _create_agents(self) -> Dict[str, Agent]:
         """Create three equal peer agents with unique perspectives.
 
         Per CONTEXT.md: Consensus allows direct peer communication.
         All peers have full HFSToolkit access (equal authority).
+
+        Each agent gets a model from _get_model_for_role() based on
+        the ModelSelector configuration.
 
         Returns:
             Dictionary with keys "peer_1", "peer_2", "peer_3"
@@ -81,7 +110,7 @@ class ConsensusAgnoTriad(AgnoTriad):
 
             agent = Agent(
                 name=agent_name,
-                model=self.model,
+                model=self._get_model_for_role(peer_name),
                 role=f"Equal peer with {perspective} focus",
                 instructions=self._peer_prompt(perspective, peer_name),
                 tools=[self.toolkit],  # All peers have full toolkit access
@@ -150,12 +179,14 @@ When voting, be explicit about your vote (APPROVE/REJECT) and rationale."""
         NOTE: respond_directly must NOT be True with delegate_to_all_members
         as they are incompatible settings.
 
+        Team uses peer_1's model for team-level operations.
+
         Returns:
             Agno Team configured for consensus deliberation
         """
         return Team(
             name=f"triad_{self.config.id}",
-            model=self.model,
+            model=self._get_model_for_role("peer_1"),  # Team uses peer_1's model
             members=list(self.agents.values()),
             delegate_to_all_members=True,  # Parallel broadcast to all peers
             share_member_interactions=True,  # Peers see each other
