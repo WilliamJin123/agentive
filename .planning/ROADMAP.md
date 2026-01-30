@@ -94,12 +94,13 @@ Plans:
   2. Phase-specific model overrides work (execution phase can use different tier)
   3. Code execution always uses Cerebras GLM-4.7 or OSS-120b
   4. Failed executions over time causes self-improvement to shift to better models
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
-- [ ] 05-01-PLAN.md - Pydantic config models and YAML tier schema
-- [ ] 05-02-PLAN.md - ModelSelector with tier resolution and provider fallback
-- [ ] 05-03-PLAN.md - EscalationTracker with permanent config updates
+- [x] 05-01-PLAN.md - Pydantic config models and YAML tier schema
+- [x] 05-02-PLAN.md - ModelSelector with tier resolution and provider fallback
+- [x] 05-03-PLAN.md - EscalationTracker with permanent config updates
+- [ ] 05-04-PLAN.md - Wire ModelSelector and EscalationTracker into application (gap closure)
 
 ### Phase 6: Observability
 **Goal**: Full visibility into agent runs, token usage, and phase timing
@@ -140,6 +141,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Agno Tools | 1/1 | Complete | 2026-01-29 |
 | 3. Agno Teams | 4/4 | Complete | 2026-01-29 |
 | 4. Shared State | 2/2 | Complete | 2026-01-30 |
-| 5. Model Tiers | 0/3 | Not started | - |
+| 5. Model Tiers | 3/4 | In progress | - |
 | 6. Observability | 0/2 | Not started | - |
 | 7. Cleanup | 0/1 | Not started | - |
