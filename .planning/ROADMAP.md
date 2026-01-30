@@ -79,10 +79,11 @@ Plans:
   3. Write tools queue edits and resolve in order
   4. IP markers prevent duplicate work across agents
   5. Agents can query "what's available" vs "what's claimed"
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: Markdown state schema and tools
+- [ ] 04-01-PLAN.md - Core state infrastructure (SharedStateManager, schemas, parser)
+- [ ] 04-02-PLAN.md - SharedStateToolkit with 4 tools and unit tests
 
 ### Phase 5: Model Tiers
 **Goal**: Model selection driven by role, phase, and failure-adaptive escalation
@@ -138,7 +139,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Keycycle Foundation | 2/2 | Complete | 2026-01-29 |
 | 2. Agno Tools | 1/1 | Complete | 2026-01-29 |
 | 3. Agno Teams | 4/4 | Complete | 2026-01-29 |
-| 4. Shared State | 0/1 | Not started | - |
+| 4. Shared State | 0/2 | Not started | - |
 | 5. Model Tiers | 0/3 | Not started | - |
 | 6. Observability | 0/2 | Not started | - |
 | 7. Cleanup | 0/1 | Not started | - |
