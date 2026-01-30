@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-29)
 
 **Core value:** Real LLM-powered multi-agent negotiation with automatic key rotation and failure-adaptive model escalation
-**Current focus:** Phase 6 - Observability (In Progress)
+**Current focus:** Phase 6 - Observability (Complete)
 
 ## Current Position
 
 Phase: 6 of 7 (Observability)
-Plan: 2 of 3 in current phase (Orchestrator instrumentation complete)
-Status: In progress
-Last activity: 2026-01-30 - Completed 06-02-PLAN.md
+Plan: 3 of 3 in current phase (Phase complete)
+Status: Phase complete
+Last activity: 2026-01-30 - Completed 06-03-PLAN.md
 
-Progress: [#################-] 94%
+Progress: [##################] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 17
+- Total plans completed: 18
 - Average duration: 5 min
-- Total execution time: 89 min
+- Total execution time: 96 min
 
 **By Phase:**
 
@@ -32,10 +32,10 @@ Progress: [#################-] 94%
 | 3 | 4/4 | 27 min | 7 min |
 | 4 | 2/2 | 8 min | 4 min |
 | 5 | 6/6 | 28 min | 5 min |
-| 6 | 2/3 | 9 min | 4.5 min |
+| 6 | 3/3 | 16 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-04 (5 min), 05-05 (6 min), 05-06 (8 min), 06-01 (4 min), 06-02 (5 min)
+- Last 5 plans: 05-05 (6 min), 05-06 (8 min), 06-01 (4 min), 06-02 (5 min), 06-03 (7 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -102,6 +102,9 @@ Recent decisions affecting current work:
 | 06-02 | Lazy initialization for tracer/meter | Avoid import-time side effects when observability not needed |
 | 06-02 | Phase spans wrap try/except for error recording | Ensure metrics recorded on both success and failure paths |
 | 06-02 | Backward-compatible phase_timings dict | Maintain existing API alongside span attributes |
+| 06-03 | Lazy initialization pattern | Module-level _get_tracer()/_get_agent_metrics() for consistency |
+| 06-03 | Token extraction fallback | Check response.usage first, then response.messages[-1].usage |
+| 06-03 | Agent span as context manager | _create_agent_span_context() returns contextmanager for clean API |
 
 ### Pending Todos
 
@@ -120,7 +123,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-30T18:18:00Z
-Stopped at: Completed 06-02-PLAN.md
+Last session: 2026-01-30T18:24:00Z
+Stopped at: Completed 06-03-PLAN.md (Phase 6 complete)
 Resume file: None
-Next: 06-03-PLAN.md - Triad and agent instrumentation
+Next: Phase 7 (if exists in ROADMAP)
