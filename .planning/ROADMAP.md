@@ -128,10 +128,11 @@ Plans:
   1. MockLLMClient class deleted from codebase
   2. HFS CLI fails gracefully with clear error when API keys missing
   3. All tests either use real APIs or are marked as integration tests
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 07-01: Remove MockLLMClient and update CLI
+- [ ] 07-01-PLAN.md - Remove MockLLMClient from CLI and tests
+- [ ] 07-02-PLAN.md - Add CLI API key check and pytest conftest.py
 
 ## Progress
 
@@ -146,4 +147,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 4. Shared State | 2/2 | Complete | 2026-01-30 |
 | 5. Model Tiers | 6/6 | Complete | 2026-01-30 |
 | 6. Observability | 3/3 | Complete | 2026-01-30 |
-| 7. Cleanup | 0/1 | Not started | - |
+| 7. Cleanup | 0/2 | Not started | - |
