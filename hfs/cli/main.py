@@ -24,66 +24,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class MockLLMClient:
-    """Mock LLM client for CLI testing without actual API keys.
-
-    This mock client simulates LLM responses for the HFS pipeline,
-    allowing the CLI to be tested and demonstrated without requiring
-    actual Anthropic API credentials.
-
-    In production, replace this with the actual Anthropic client:
-        from anthropic import Anthropic
-        client = Anthropic()
-    """
-
-    def __init__(self) -> None:
-        """Initialize the mock client."""
-        self._call_count = 0
-
-    async def messages_create(
-        self,
-        model: str,
-        max_tokens: int,
-        messages: list,
-        **kwargs: Any
-    ) -> Dict[str, Any]:
-        """Mock message creation that returns simulated responses.
-
-        Args:
-            model: The model name (ignored in mock).
-            max_tokens: Maximum tokens (ignored in mock).
-            messages: The messages to process.
-            **kwargs: Additional arguments (ignored).
-
-        Returns:
-            A mock response structure.
-        """
-        self._call_count += 1
-
-        # Return a simple mock response
-        return {
-            "content": [
-                {
-                    "type": "text",
-                    "text": json.dumps({
-                        "position": f"Mock position from call {self._call_count}",
-                        "claims": ["layout", "visual"],
-                        "proposals": {
-                            "layout": {"approach": "grid-based responsive layout"},
-                            "visual": {"approach": "clean, minimal design"}
-                        },
-                        "code": {
-                            "layout": "export const Layout = () => <div>Layout</div>;",
-                            "visual": "export const Visual = () => <div>Visual</div>;"
-                        }
-                    })
-                }
-            ],
-            "model": model,
-            "stop_reason": "end_turn"
-        }
-
-
 def create_argument_parser() -> argparse.ArgumentParser:
     """Create and configure the argument parser.
 
@@ -248,15 +188,12 @@ def cmd_run(args: argparse.Namespace) -> int:
     # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Create LLM client (mock for now)
-    print("\nNote: Using mock LLM client. For production, configure actual API credentials.")
-    llm_client = MockLLMClient()
-
     # Create orchestrator and run pipeline
+    # Note: llm_client will be handled in Plan 02 with proper API key checks
     try:
         orchestrator = HFSOrchestrator(
             config_path=config_path,
-            llm_client=llm_client
+            llm_client=None
         )
 
         print(f"\nRunning HFS pipeline...")
