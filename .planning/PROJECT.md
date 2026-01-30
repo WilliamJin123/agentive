@@ -31,7 +31,21 @@ Real LLM-powered multi-agent negotiation with automatic key rotation and failure
 
 ### Active
 
-(None — run `/gsd:new-milestone` to define next milestone)
+**Current Milestone: v1.1 HFS CLI (Ink)**
+
+**Goal:** Build a rich Ink-based CLI frontend with full observability abstraction layer, preparing for future web UI.
+
+**Target features:**
+- Event/state layer — HFS emits events, state layer captures them
+- Query interface — Clean API for agent tree, traces, token usage
+- Serializable models — All inspection data as JSON-ready models
+- Ink-based CLI in `hfs/cli/` consuming the abstraction layer
+- Chat-style REPL with streaming responses
+- Bee/hive/hexagonal visual theme (yellow accent)
+- Live agent streaming via event subscription
+- Deep inspection: agent tree, trace timeline, token breakdown
+- Global `hfs` command entry point
+- Replaces existing typer-based CLI
 
 ### Out of Scope
 
@@ -94,4 +108,4 @@ Real LLM-powered multi-agent negotiation with automatic key rotation and failure
 | Integration tests skip by default | Require --run-integration flag for API tests | ✓ Good |
 
 ---
-*Last updated: 2026-01-30 after v1 milestone*
+*Last updated: 2026-01-30 after v1.1 milestone start*
