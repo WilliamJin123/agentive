@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Shared State** - Markdown-based coordination layer with async locking
 - [x] **Phase 5: Model Tiers** - Role-based model selection with adaptive escalation
 - [x] **Phase 6: Observability** - OpenTelemetry tracing and usage metrics
-- [ ] **Phase 7: Cleanup** - Remove MockLLMClient, require real API keys
+- [x] **Phase 7: Cleanup** - Remove MockLLMClient, require real API keys
 
 ## Phase Details
 
@@ -131,8 +131,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 07-01-PLAN.md - Remove MockLLMClient from CLI and tests
-- [ ] 07-02-PLAN.md - Add CLI API key check and pytest conftest.py
+- [x] 07-01-PLAN.md - Remove MockLLMClient from CLI and tests
+- [x] 07-02-PLAN.md - Add CLI API key check and pytest conftest.py
 
 ## Progress
 
@@ -147,4 +147,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 4. Shared State | 2/2 | Complete | 2026-01-30 |
 | 5. Model Tiers | 6/6 | Complete | 2026-01-30 |
 | 6. Observability | 3/3 | Complete | 2026-01-30 |
-| 7. Cleanup | 0/2 | Not started | - |
+| 7. Cleanup | 2/2 | Complete | 2026-01-30 |

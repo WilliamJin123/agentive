@@ -34,7 +34,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Cleanup
 
-- [ ] **CLEN-01**: MockLLMClient removed entirely (no fallback, require real API keys)
+- [x] **CLEN-01**: MockLLMClient removed entirely (no fallback, require real API keys)
 
 ## v2 Requirements
 
@@ -82,7 +82,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OBSV-01 | Phase 6 | Complete |
 | OBSV-02 | Phase 6 | Complete |
 | OBSV-03 | Phase 6 | Complete |
-| CLEN-01 | Phase 7 | Pending |
+| CLEN-01 | Phase 7 | Complete |
 
 **Coverage:**
 - v1 requirements: 14 total
@@ -91,4 +91,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-29*
-*Last updated: 2026-01-30 after Phase 6 completion*
+*Last updated: 2026-01-30 after Phase 7 completion (milestone complete)*
