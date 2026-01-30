@@ -203,6 +203,15 @@ class HFSOrchestrator:
         # Initialize emergent observer
         self.observer = EmergentObserver()
 
+        # Store raw config for model_tiers access (HFSConfig doesn't include it)
+        if config_path is not None:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                import yaml
+                raw = yaml.safe_load(f)
+                self._raw_config = raw.get('config', raw)
+        else:
+            self._raw_config = config_dict.get('config', config_dict) if config_dict else {}
+
         # Internal state
         self._negotiation_result: Optional[NegotiationResult] = None
         self._deliberation_results: Dict[str, TriadOutput] = {}
@@ -232,6 +241,23 @@ class HFSOrchestrator:
         phase_timings: Dict[str, float] = {}
 
         try:
+            # ============================================================
+            # LAZY INITIALIZATION: ModelSelector and EscalationTracker
+            # ============================================================
+            # Create ModelSelector if not provided but model_tiers exists in config
+            if self.model_selector is None and 'model_tiers' in self._raw_config:
+                self.model_selector = self._create_default_model_selector()
+                logger.info("Created default ModelSelector from config model_tiers section")
+
+            # Create EscalationTracker if not provided but model_selector exists
+            if self.escalation_tracker is None and self.model_selector is not None:
+                if self._config_path is not None:
+                    self.escalation_tracker = EscalationTracker(
+                        self._config_path,
+                        self.model_selector.config,
+                    )
+                    logger.info("Created default EscalationTracker for failure-adaptive escalation")
+
             # ============================================================
             # PHASE 1: INPUT
             # ============================================================
@@ -404,6 +430,10 @@ class HFSOrchestrator:
 
         Creates Triad instances for each triad defined in the config,
         using the appropriate preset class (hierarchical, dialectic, consensus).
+
+        If model_selector is available, uses create_agno_triad for role-based
+        model selection. Otherwise falls back to create_triad with self.llm
+        for backward compatibility.
         """
         self.triads = {}
 
@@ -421,13 +451,27 @@ class HFSOrchestrator:
                 system_context=triad_config.system_context,
             )
 
-            # Create triad using factory
-            triad = create_triad(config, self.llm)
-            self.triads[triad_config.id] = triad
+            # Create triad using appropriate factory based on model_selector availability
+            if self.model_selector is not None:
+                # Use new Agno-based triads with role-based model selection
+                triad = create_agno_triad(
+                    config,
+                    self.model_selector,
+                    self.spec,
+                    escalation_tracker=self.escalation_tracker,
+                )
+                logger.debug(
+                    f"Spawned AgnoTriad '{triad_config.id}' with preset '{triad_config.preset}' "
+                    f"(model_selector enabled)"
+                )
+            else:
+                # Backward compatibility: use legacy single-model triads
+                triad = create_triad(config, self.llm)
+                logger.debug(
+                    f"Spawned triad '{triad_config.id}' with preset '{triad_config.preset}'"
+                )
 
-            logger.debug(
-                f"Spawned triad '{triad_config.id}' with preset '{triad_config.preset}'"
-            )
+            self.triads[triad_config.id] = triad
 
     def _initialize_spec(self) -> None:
         """Initialize the spec with sections from config.
@@ -637,6 +681,34 @@ class HFSOrchestrator:
             The HFSConfig instance.
         """
         return self.config
+
+    def _create_default_model_selector(self) -> ModelSelector:
+        """Create a ModelSelector from config's model_tiers section.
+
+        Called during lazy initialization in run() when model_selector is None
+        but config has a model_tiers section.
+
+        Returns:
+            ModelSelector instance configured from model_tiers
+
+        Raises:
+            ValueError: If model_tiers section is missing or invalid
+        """
+        model_tiers_data = self._raw_config.get('model_tiers')
+        if not model_tiers_data:
+            raise ValueError("Cannot create ModelSelector: model_tiers section missing from config")
+
+        # Parse model_tiers into ModelTiersConfig
+        model_tiers_config = ModelTiersConfig(**model_tiers_data)
+
+        # Create ProviderManager
+        provider_manager = ProviderManager()
+
+        logger.debug(
+            f"Created default ModelSelector with tiers: {list(model_tiers_config.tiers.keys())}"
+        )
+
+        return ModelSelector(model_tiers_config, provider_manager)
 
 
 # Convenience function for quick runs
