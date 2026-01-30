@@ -12,10 +12,17 @@ Use create_agno_triad() for ModelSelector-based triads (new API).
 """
 
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from typing import Dict, Any, Optional, TYPE_CHECKING
 import json
 import os
+import time
 from pathlib import Path
+
+from opentelemetry.trace import Status, StatusCode
+
+from hfs.observability import get_tracer, get_meter
+from hfs.observability.tracing import truncate_prompt
 
 from agno.team import Team
 from agno.agent import Agent
@@ -29,6 +36,43 @@ if TYPE_CHECKING:
     from hfs.core.spec import Spec
     from hfs.core.model_selector import ModelSelector
     from hfs.core.escalation_tracker import EscalationTracker
+
+
+# Module-level tracer and metrics (lazy initialization)
+_tracer = None
+_meter = None
+_triad_duration = None
+_agent_duration = None
+_tokens_prompt = None
+_tokens_completion = None
+
+
+def _get_tracer():
+    """Get tracer for triad spans, initializing lazily."""
+    global _tracer
+    if _tracer is None:
+        _tracer = get_tracer("hfs.agno.triad")
+    return _tracer
+
+
+def _get_agent_metrics():
+    """Get metrics instruments for triad/agent tracking, initializing lazily."""
+    global _meter, _triad_duration, _agent_duration, _tokens_prompt, _tokens_completion
+    if _meter is None:
+        _meter = get_meter("hfs.agno.triad")
+        _triad_duration = _meter.create_histogram(
+            "hfs.triad.duration", unit="s", description="Duration of triad execution"
+        )
+        _agent_duration = _meter.create_histogram(
+            "hfs.agent.duration", unit="s", description="Duration of agent execution"
+        )
+        _tokens_prompt = _meter.create_counter(
+            "hfs.tokens.prompt", unit="{token}", description="Prompt tokens used"
+        )
+        _tokens_completion = _meter.create_counter(
+            "hfs.tokens.completion", unit="{token}", description="Completion tokens used"
+        )
+    return _triad_duration, _agent_duration, _tokens_prompt, _tokens_completion
 
 
 class AgnoTriad(ABC):
@@ -211,10 +255,13 @@ class AgnoTriad(ABC):
         phase: str,
         prompt: str,
     ) -> Any:
-        """Run team with error handling and state preservation.
+        """Run team with error handling, state preservation, and tracing.
 
         Per CONTEXT.md: Abort on failure, preserve partial progress,
         raise TriadExecutionError with context.
+
+        Creates a triad-level span that wraps the entire execution and
+        records token usage, duration, and success/failure status.
 
         Args:
             phase: Current phase name
@@ -226,41 +273,112 @@ class AgnoTriad(ABC):
         Raises:
             TriadExecutionError: On any failure with context preserved
         """
-        try:
-            # Update current phase in session state
-            self._session_state.current_phase = phase
+        tracer = _get_tracer()
+        triad_duration, agent_duration, tokens_prompt, tokens_completion = _get_agent_metrics()
 
-            # Run the team
-            response = await self.team.arun(prompt)
+        with tracer.start_as_current_span(f"hfs.triad.{self.config.id}") as triad_span:
+            # Set triad span attributes
+            triad_span.set_attribute("hfs.triad.id", self.config.id)
+            triad_span.set_attribute("hfs.triad.type", self.config.preset.value)
+            triad_span.set_attribute("hfs.triad.phase", phase)
+            triad_span.set_attribute("hfs.triad.prompt_snippet", truncate_prompt(prompt))
+            triad_span.set_attribute("hfs.triad.agent_roles", list(self.agents.keys()))
 
-            # Record success for all agent roles if tracker exists
-            if self.escalation_tracker is not None:
-                for role in self.agents.keys():
-                    self.escalation_tracker.record_success(self.config.id, role)
+            # Record tier info if model_selector available
+            if self.model_selector:
+                agent_roles = list(self.agents.keys())
+                if agent_roles:
+                    lead_role = agent_roles[0]  # e.g., "orchestrator"
+                    tier = self.model_selector.get_current_tier(self.config.id, lead_role)
+                    if tier:
+                        triad_span.set_attribute("hfs.triad.tier", tier)
 
-            return response
+            triad_start = time.time()
+            try:
+                # Update current phase in session state
+                self._session_state.current_phase = phase
 
-        except Exception as e:
-            # Record failure if tracker exists
-            if self.escalation_tracker is not None:
-                # Record failure for team-level error
-                self.escalation_tracker.record_failure(self.config.id, "team")
+                # Run the team
+                response = await self.team.arun(prompt)
 
-            # Save partial progress before raising
-            self._save_partial_progress(phase)
+                duration = time.time() - triad_start
+                triad_span.set_attribute("hfs.triad.duration_s", duration)
+                triad_span.set_attribute("hfs.triad.success", True)
+                triad_duration.record(duration, {"hfs.triad.id": self.config.id, "hfs.triad.phase": phase})
 
-            # Extract agent name if available
-            agent = "unknown"
-            error_str = str(e)
+                # Extract and record token usage if available
+                self._record_token_usage(triad_span, response)
 
-            # Raise structured error
-            raise TriadExecutionError(
-                triad_id=self.config.id,
-                phase=phase,
-                agent=agent,
-                error=error_str,
-                partial_state=self._session_state.model_dump(),
-            ) from e
+                # Record success for all agent roles if tracker exists
+                if self.escalation_tracker is not None:
+                    for role in self.agents.keys():
+                        self.escalation_tracker.record_success(self.config.id, role)
+
+                return response
+
+            except Exception as e:
+                duration = time.time() - triad_start
+                triad_span.record_exception(e)
+                triad_span.set_status(Status(StatusCode.ERROR, str(e)))
+                triad_span.set_attribute("hfs.triad.success", False)
+                triad_span.set_attribute("hfs.triad.duration_s", duration)
+                triad_duration.record(duration, {"hfs.triad.id": self.config.id, "hfs.triad.phase": phase})
+
+                # Record failure if tracker exists
+                if self.escalation_tracker is not None:
+                    # Record failure for team-level error
+                    self.escalation_tracker.record_failure(self.config.id, "team")
+
+                # Save partial progress before raising
+                self._save_partial_progress(phase)
+
+                # Extract agent name if available
+                agent = "unknown"
+                error_str = str(e)
+
+                # Raise structured error
+                raise TriadExecutionError(
+                    triad_id=self.config.id,
+                    phase=phase,
+                    agent=agent,
+                    error=error_str,
+                    partial_state=self._session_state.model_dump(),
+                ) from e
+
+    def _record_token_usage(self, span, response: Any) -> None:
+        """Record token usage from LLM response if available.
+
+        Extracts usage data from Agno team response and records as span attributes.
+        Per CONTEXT.md: Track prompt_tokens and completion_tokens separately.
+
+        Args:
+            span: OpenTelemetry span to record attributes on
+            response: Response from team.arun() that may contain usage data
+        """
+        triad_duration, agent_duration, tokens_prompt, tokens_completion = _get_agent_metrics()
+
+        # Try to extract usage from response
+        # Agno may store this in response.usage or response.messages[-1].usage
+        usage = None
+        if hasattr(response, 'usage') and response.usage:
+            usage = response.usage
+        elif hasattr(response, 'messages') and response.messages:
+            last_msg = response.messages[-1]
+            if hasattr(last_msg, 'usage') and last_msg.usage:
+                usage = last_msg.usage
+
+        if usage:
+            prompt_tokens = getattr(usage, 'prompt_tokens', 0) or 0
+            completion_tokens = getattr(usage, 'completion_tokens', 0) or 0
+
+            span.set_attribute("hfs.tokens.prompt", prompt_tokens)
+            span.set_attribute("hfs.tokens.completion", completion_tokens)
+            span.set_attribute("hfs.tokens.total", prompt_tokens + completion_tokens)
+
+            # Record metrics
+            labels = {"hfs.triad.id": self.config.id}
+            tokens_prompt.add(prompt_tokens, labels)
+            tokens_completion.add(completion_tokens, labels)
 
     def _save_partial_progress(self, phase: str) -> None:
         """Save session state to file for recovery.
