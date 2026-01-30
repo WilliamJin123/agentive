@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 ## Current Position
 
 Phase: 5 of 7 (Model Tiers)
-Plan: 5 of 5 in current phase (subclass integration complete)
+Plan: 6 of 6 in current phase (orchestrator integration complete)
 Status: Phase complete
-Last activity: 2026-01-30 - Completed 05-05-PLAN.md
+Last activity: 2026-01-30 - Completed 05-06-PLAN.md
 
 Progress: [##########] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
+- Total plans completed: 15
 - Average duration: 5 min
-- Total execution time: 72 min
+- Total execution time: 80 min
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: [##########] 100%
 | 2 | 1/1 | 5 min | 5 min |
 | 3 | 4/4 | 27 min | 7 min |
 | 4 | 2/2 | 8 min | 4 min |
-| 5 | 5/5 | 20 min | 4 min |
+| 5 | 6/6 | 28 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-01 (2 min), 05-02 (3 min), 05-03 (4 min), 05-04 (5 min), 05-05 (6 min)
+- Last 5 plans: 05-02 (3 min), 05-03 (4 min), 05-04 (5 min), 05-05 (6 min), 05-06 (8 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -92,6 +92,9 @@ Recent decisions affecting current work:
 | 05-04 | AGNO_TRIAD_REGISTRY separate from TRIAD_REGISTRY | Parallel API support during migration |
 | 05-05 | Each subclass calls _get_model_for_role() for agents | Consistent with base class API, enables role-specific tiers |
 | 05-05 | Team uses lead agent's model | Orchestrator/synthesizer/peer_1 model for team-level operations |
+| 05-06 | Lazy initialization in run() for ModelSelector/EscalationTracker | Avoid expensive operations until needed |
+| 05-06 | Store raw config for model_tiers access | HFSConfig doesn't include model_tiers section |
+| 05-06 | Factory dispatch based on model_selector availability | Backward compatibility with create_triad |
 
 ### Pending Todos
 
@@ -106,10 +109,11 @@ None.
 - Phase 4 added: Shared State - Markdown-based coordination layer with async locking (inserted after Phase 3, renumbered subsequent phases)
 - 05-04 added: Gap closure plan to wire ModelSelector and EscalationTracker into AgnoTriad base class
 - 05-05 added: Gap closure plan to update all AgnoTriad subclasses for ModelSelector integration
+- 05-06 added: Gap closure plan to wire ModelSelector and EscalationTracker into orchestrator
 
 ## Session Continuity
 
-Last session: 2026-01-30T03:30:05Z
-Stopped at: Completed 05-05-PLAN.md
+Last session: 2026-01-30T03:43:00Z
+Stopped at: Completed 05-06-PLAN.md
 Resume file: None
 Next: Phase 5 complete - ready for Phase 6 (Runtime)
