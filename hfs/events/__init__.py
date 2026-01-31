@@ -61,6 +61,7 @@ from hfs.events.models import (
 )
 from hfs.events.bus import EventBus
 from hfs.events.stream import EventStream, Subscription
+from hfs.events.otel_bridge import EventBridgeSpanProcessor
 
 
 __all__ = [
@@ -68,6 +69,8 @@ __all__ = [
     "EventBus",
     "EventStream",
     "Subscription",
+    # OTel bridge
+    "EventBridgeSpanProcessor",
     # Base
     "HFSEvent",
     # Run lifecycle

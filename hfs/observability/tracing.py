@@ -5,6 +5,10 @@ Provides TracerProvider configuration with console and optional OTLP export.
 Uses BatchSpanProcessor for non-blocking span export (never SimpleSpanProcessor
 which blocks the calling thread).
 
+Optionally integrates with EventBridgeSpanProcessor to automatically emit HFS
+events when spans start/end, enabling real-time UI updates without explicit
+event emission in core code.
+
 Span Naming Convention:
     - hfs.run: Top-level pipeline execution
     - hfs.phase.{name}: Phase execution (deliberation, negotiation, execution)
@@ -15,8 +19,10 @@ Attributes are used for variable data (run_id, model name, tokens) to keep
 span names low-cardinality.
 """
 
+from __future__ import annotations
+
 import os
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
@@ -25,32 +31,57 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExport
 from opentelemetry.sdk.resources import Resource, SERVICE_NAME
 from opentelemetry.trace import Tracer
 
+if TYPE_CHECKING:
+    from hfs.events.bus import EventBus
+    from hfs.events.otel_bridge import EventBridgeSpanProcessor
+
 
 # Module-level provider reference for shutdown handling
 _tracer_provider: Optional[TracerProvider] = None
 
+# Module-level event bridge reference for potential access
+_event_bridge_processor: Optional["EventBridgeSpanProcessor"] = None
 
-def setup_tracing(service_name: str = "hfs") -> TracerProvider:
+
+def setup_tracing(
+    service_name: str = "hfs",
+    event_bus: Optional["EventBus"] = None,
+    run_id: Optional[str] = None,
+    event_prefixes: Optional[list[str]] = None,
+) -> TracerProvider:
     """Initialize OpenTelemetry tracing with console and optional OTLP export.
 
     Creates a TracerProvider with:
     - Resource identifying the service
     - BatchSpanProcessor with ConsoleSpanExporter (always, for dev visibility)
     - BatchSpanProcessor with OTLPSpanExporter (if OTEL_EXPORTER_OTLP_ENDPOINT set)
+    - EventBridgeSpanProcessor (if event_bus provided) for automatic event emission
 
     Args:
         service_name: Service name for resource identification. Defaults to "hfs".
+        event_bus: Optional EventBus for automatic event emission from spans.
+            When provided, spans matching event_prefixes will emit events.
+        run_id: Run ID to include in emitted events. Required if event_bus provided.
+        event_prefixes: Span name prefixes that emit events. Defaults to
+            ["hfs.", "agent.", "negotiation."] if not specified.
 
     Returns:
         The configured TracerProvider, also set as global provider.
 
     Example:
+        >>> # Basic usage (no events)
         >>> provider = setup_tracing()
         >>> tracer = get_tracer("hfs.my_module")
         >>> with tracer.start_as_current_span("hfs.my_operation") as span:
         ...     span.set_attribute("key", "value")
+
+        >>> # With event bridge
+        >>> from hfs.events import EventBus
+        >>> bus = EventBus()
+        >>> provider = setup_tracing(event_bus=bus, run_id="run-123")
+        >>> # Now spans automatically emit events to bus
     """
-    global _tracer_provider
+    global _tracer_provider, _event_bridge_processor
 
     resource = Resource.create({
         SERVICE_NAME: service_name,
@@ -70,6 +101,18 @@ def setup_tracing(service_name: str = "hfs") -> TracerProvider:
         otlp_exporter = OTLPSpanExporter(endpoint=f"{otlp_endpoint}/v1/traces")
         otlp_processor = BatchSpanProcessor(otlp_exporter)
         provider.add_span_processor(otlp_processor)
+
+    # Add event bridge processor if event_bus provided
+    if event_bus is not None:
+        from hfs.events.otel_bridge import EventBridgeSpanProcessor
+
+        event_bridge = EventBridgeSpanProcessor(
+            event_bus=event_bus,
+            run_id=run_id or "unknown",
+            prefixes=event_prefixes,
+        )
+        provider.add_span_processor(event_bridge)
+        _event_bridge_processor = event_bridge
 
     # Set as global tracer provider
     trace.set_tracer_provider(provider)
@@ -130,4 +173,5 @@ __all__ = [
     "get_tracer",
     "truncate_prompt",
     "_tracer_provider",
+    "_event_bridge_processor",
 ]
