@@ -48,11 +48,11 @@ See: .planning/MILESTONES.md for v1 summary.
 3. EventStream async generator yields events for real-time consumption
 4. OpenTelemetry spans automatically emit corresponding events via custom SpanProcessor
 
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: Event models and async event bus
-- [ ] 08-02: OTel SpanProcessor for event emission
+- [ ] 08-01-PLAN.md — Event models and async event bus
+- [ ] 08-02-PLAN.md — OTel SpanProcessor for event emission
 
 ---
 
@@ -170,7 +170,7 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 8. Event Foundation | v1.1 | 0/2 | Not started | - |
+| 8. Event Foundation | v1.1 | 0/2 | Planned | - |
 | 9. State & Query Layer | v1.1 | 0/2 | Not started | - |
 | 10. Textual Core | v1.1 | 0/3 | Not started | - |
 | 11. Agent Visibility & Inspection | v1.1 | 0/2 | Not started | - |
