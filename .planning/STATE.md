@@ -4,43 +4,51 @@
 
 See: .planning/PROJECT.md (updated 2026-01-30)
 
-**Core value:** Real LLM-powered multi-agent negotiation with automatic key rotation and failure-adaptive model escalation
-**Current focus:** v1.1 HFS CLI (Ink)
+**Core value:** Rich terminal UI with full observability into multi-agent negotiation
+**Current focus:** Phase 8 - Event Foundation
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-01-30 — Milestone v1.1 started
+Phase: 8 of 13 (Event Foundation)
+Plan: 0 of 2 in current phase
+Status: Ready to plan
+Last activity: 2026-01-30 — Roadmap created for v1.1 milestone
 
-Progress: Milestone v1.1 initialization
+Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (0/15 plans)
 
 ## Performance Metrics
 
-**v1 Milestone:**
+**v1 Milestone (completed):**
 - Total plans completed: 20
 - Total phases: 7
 - Total commits: 108
 - Duration: 2 days (2026-01-29 to 2026-01-30)
 
-**By Phase:**
+**v1.1 Milestone:**
+- Total plans completed: 0
+- Average duration: —
+- Total execution time: —
+
+**By Phase (v1.1):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1 | 2/2 | 12 min | 6 min |
-| 2 | 1/1 | 5 min | 5 min |
-| 3 | 4/4 | 27 min | 7 min |
-| 4 | 2/2 | 8 min | 4 min |
-| 5 | 6/6 | 28 min | 5 min |
-| 6 | 3/3 | 16 min | 5 min |
-| 7 | 2/2 | 10 min | 5 min |
+| 8 | 0/2 | — | — |
+| 9 | 0/2 | — | — |
+| 10 | 0/3 | — | — |
+| 11 | 0/2 | — | — |
+| 12 | 0/2 | — | — |
+| 13 | 0/4 | — | — |
 
 ## Accumulated Context
 
 ### Decisions
 
 See PROJECT.md Key Decisions table for full log.
+
+Recent decisions for v1.1:
+- Textual (Python) over Ink (JS) — eliminates IPC complexity, native integration
+- Event sourcing lite pattern — events emitted, state computed, queryable via API
 
 ### Pending Todos
 
@@ -50,13 +58,9 @@ None.
 
 None.
 
-### Roadmap Evolution
-
-v1 milestone archived. Phase numbering continues from 8 in next milestone.
-
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: v1.1 milestone initialization
+Stopped at: Roadmap created
 Resume file: None
-Next: Define requirements → create roadmap
+Next: `/gsd:plan-phase 8`

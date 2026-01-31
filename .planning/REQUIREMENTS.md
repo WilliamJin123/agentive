@@ -149,13 +149,76 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (To be filled by roadmapper) | | |
+| ABS-01 | Phase 8 | Pending |
+| ABS-07 | Phase 8 | Pending |
+| ABS-02 | Phase 9 | Pending |
+| ABS-03 | Phase 9 | Pending |
+| ABS-04 | Phase 9 | Pending |
+| ABS-05 | Phase 9 | Pending |
+| ABS-06 | Phase 9 | Pending |
+| ABS-08 | Phase 9 | Pending |
+| ENTRY-01 | Phase 10 | Pending |
+| ENTRY-02 | Phase 10 | Pending |
+| ENTRY-03 | Phase 10 | Pending |
+| ENTRY-04 | Phase 10 | Pending |
+| CHAT-01 | Phase 10 | Pending |
+| CHAT-02 | Phase 10 | Pending |
+| CHAT-03 | Phase 10 | Pending |
+| CHAT-04 | Phase 10 | Pending |
+| CHAT-05 | Phase 10 | Pending |
+| CHAT-06 | Phase 10 | Pending |
+| CHAT-07 | Phase 10 | Pending |
+| STRM-01 | Phase 10 | Pending |
+| STRM-02 | Phase 10 | Pending |
+| STRM-03 | Phase 10 | Pending |
+| STRM-04 | Phase 10 | Pending |
+| THEME-01 | Phase 10 | Pending |
+| THEME-02 | Phase 10 | Pending |
+| THEME-03 | Phase 10 | Pending |
+| THEME-04 | Phase 10 | Pending |
+| AGENT-01 | Phase 11 | Pending |
+| AGENT-02 | Phase 11 | Pending |
+| AGENT-03 | Phase 11 | Pending |
+| AGENT-04 | Phase 11 | Pending |
+| AGENT-05 | Phase 11 | Pending |
+| AGENT-06 | Phase 11 | Pending |
+| INSP-01 | Phase 11 | Pending |
+| INSP-02 | Phase 11 | Pending |
+| INSP-03 | Phase 11 | Pending |
+| INSP-04 | Phase 11 | Pending |
+| INSP-05 | Phase 11 | Pending |
+| INSP-06 | Phase 11 | Pending |
+| CONF-01 | Phase 12 | Pending |
+| CONF-02 | Phase 12 | Pending |
+| CONF-03 | Phase 12 | Pending |
+| MODE-01 | Phase 12 | Pending |
+| MODE-02 | Phase 12 | Pending |
+| MODE-03 | Phase 12 | Pending |
+| INPUT-01 | Phase 12 | Pending |
+| INPUT-02 | Phase 12 | Pending |
+| INPUT-03 | Phase 12 | Pending |
+| INPUT-04 | Phase 12 | Pending |
+| SESS-01 | Phase 13 | Pending |
+| SESS-02 | Phase 13 | Pending |
+| SESS-03 | Phase 13 | Pending |
+| SESS-04 | Phase 13 | Pending |
+| CHKP-01 | Phase 13 | Pending |
+| CHKP-02 | Phase 13 | Pending |
+| CHKP-03 | Phase 13 | Pending |
+| CHKP-04 | Phase 13 | Pending |
+| EXPT-01 | Phase 13 | Pending |
+| EXPT-02 | Phase 13 | Pending |
+| EXPT-03 | Phase 13 | Pending |
+| PLUG-01 | Phase 13 | Pending |
+| PLUG-02 | Phase 13 | Pending |
+| PLUG-03 | Phase 13 | Pending |
+| PLUG-04 | Phase 13 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 52 total
-- Mapped to phases: 0
-- Unmapped: 52
+- Mapped to phases: 52
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-30*
-*Last updated: 2026-01-30 after initial definition*
+*Last updated: 2026-01-30 after roadmap creation*
