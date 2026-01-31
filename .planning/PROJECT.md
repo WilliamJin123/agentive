@@ -31,15 +31,15 @@ Real LLM-powered multi-agent negotiation with automatic key rotation and failure
 
 ### Active
 
-**Current Milestone: v1.1 HFS CLI (Ink)**
+**Current Milestone: v1.1 HFS CLI (Textual)**
 
-**Goal:** Build a rich Ink-based CLI frontend with full observability abstraction layer, preparing for future web UI.
+**Goal:** Build a rich Textual-based CLI frontend with full observability abstraction layer, preparing for future web UI (or Textual-web).
 
 **Target features:**
 - Event/state layer — HFS emits events, state layer captures them
 - Query interface — Clean API for agent tree, traces, token usage
 - Serializable models — All inspection data as JSON-ready models
-- Ink-based CLI in `hfs/cli/` consuming the abstraction layer
+- Textual-based CLI in `hfs/cli/` consuming the abstraction layer
 - Chat-style REPL with streaming responses
 - Bee/hive/hexagonal visual theme (yellow accent)
 - Live agent streaming via event subscription
