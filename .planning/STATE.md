@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-01-30)
 
 **Core value:** Rich terminal UI with full observability into multi-agent negotiation
-**Current focus:** Phase 9 - State Manager
+**Current focus:** Phase 9 - State & Query Layer
 
 ## Current Position
 
-Phase: 8 of 13 (Event Foundation) - COMPLETE
-Plan: 2 of 2 in phase 8
-Status: Phase complete
-Last activity: 2026-01-31 - Completed 08-02-PLAN.md (OTel SpanProcessor Bridge)
+Phase: 9 of 13 (State & Query Layer)
+Plan: 0 of 2 in current phase
+Status: Ready to plan
+Last activity: 2026-01-31 — Phase 8 complete, verified
 
 Progress: [██░░░░░░░░░░░░░░░░░░] 13% (2/15 plans)
 
@@ -66,11 +66,11 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed 08-02-PLAN.md (Phase 8 complete)
+Stopped at: Phase 8 execution complete, verified
 Resume file: None
-Next: `/gsd:execute-phase` for Phase 9 (State Manager)
+Next: `/gsd:discuss-phase 9` or `/gsd:plan-phase 9`
 
-Dependency context from Phase 8:
+**Phase 8 deliverables (ready for Phase 9):**
 - Event models: HFSEvent, Run/Phase/Agent/Negotiation events ready
 - EventBus: subscribe(), emit(), once() with wildcard patterns
 - OTel bridge: EventBridgeSpanProcessor auto-emits events from spans

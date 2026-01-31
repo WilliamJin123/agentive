@@ -149,8 +149,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ABS-01 | Phase 8 | Pending |
-| ABS-07 | Phase 8 | Pending |
+| ABS-01 | Phase 8 | Complete |
+| ABS-07 | Phase 8 | Complete |
 | ABS-02 | Phase 9 | Pending |
 | ABS-03 | Phase 9 | Pending |
 | ABS-04 | Phase 9 | Pending |
@@ -221,4 +221,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-30*
-*Last updated: 2026-01-30 after roadmap creation*
+*Last updated: 2026-01-31 — Phase 8 requirements complete*
