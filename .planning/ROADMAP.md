@@ -69,11 +69,11 @@ Plans:
 4. Query interface returns token usage breakdown by agent, phase, and total
 5. Query interface returns trace timeline with phase durations
 
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 09-01: Snapshot models and StateManager
-- [ ] 09-02: Query interface implementation
+- [ ] 09-01-PLAN.md — Snapshot models and StateManager
+- [ ] 09-02-PLAN.md — Query interface implementation
 
 ---
 
