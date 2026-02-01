@@ -25,6 +25,7 @@ Classes:
     TraceTimeline: Run timing information
 """
 
+from hfs.state.manager import StateManager
 from hfs.state.models import (
     AgentNode,
     AgentStatus,
@@ -42,6 +43,8 @@ from hfs.state.models import (
 )
 
 __all__ = [
+    # StateManager
+    "StateManager",
     # Models - Agent
     "AgentStatus",
     "AgentNode",
