@@ -90,12 +90,14 @@ Plans:
 4. Slash commands work: /help, /clear, /exit, and Ctrl+C quits gracefully
 5. Visual theme applies yellow/amber colors with triad-type color coding
 
-**Plans**: 3 plans
+**Plans**: 5 plans (3 core + 2 gap closure)
 
 Plans:
-- [ ] 10-01-PLAN.md — Entry point and Textual app scaffold
-- [ ] 10-02-PLAN.md — Chat widget with streaming and markdown
-- [ ] 10-03-PLAN.md — Visual theme and status bar
+- [x] 10-01-PLAN.md — Entry point and Textual app scaffold
+- [x] 10-02-PLAN.md — Chat widgets with streaming and markdown
+- [x] 10-03-PLAN.md — Visual theme and status bar
+- [ ] 10-04-PLAN.md — (gap closure) Wire ChatScreen to real LLM
+- [ ] 10-05-PLAN.md — (gap closure) Command history with arrow keys and Ctrl+R
 
 ---
 
@@ -172,13 +174,13 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 8. Event Foundation | v1.1 | 2/2 | ✓ Complete | 2026-01-31 |
 | 9. State & Query Layer | v1.1 | 2/2 | ✓ Complete | 2026-02-01 |
-| 10. Textual Core | v1.1 | 0/3 | Not started | - |
+| 10. Textual Core | v1.1 | 3/5 | Gap closure | - |
 | 11. Agent Visibility & Inspection | v1.1 | 0/2 | Not started | - |
 | 12. User Experience | v1.1 | 0/2 | Not started | - |
 | 13. Persistence & Plugins | v1.1 | 0/4 | Not started | - |
 
-**Total:** 4/15 plans complete (27%)
+**Total:** 7/17 plans complete (41%)
 
 ---
 *Roadmap created: 2026-01-30*
-*Last updated: 2026-02-01*
+*Last updated: 2026-01-31*
