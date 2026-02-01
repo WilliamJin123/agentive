@@ -11,8 +11,11 @@ Usage:
     self.push_screen(ChatScreen())
 """
 
+from __future__ import annotations
+
 import asyncio
-from typing import ClassVar
+import logging
+from typing import TYPE_CHECKING, ClassVar
 
 from textual import work
 from textual.app import ComposeResult
@@ -20,6 +23,11 @@ from textual.containers import Container, Vertical
 from textual.screen import Screen
 
 from ..widgets import ChatInput, ChatMessage, HFSStatusBar, MessageList, PulsingDot
+
+if TYPE_CHECKING:
+    from hfs.agno.providers import ProviderManager
+
+logger = logging.getLogger(__name__)
 
 
 class ChatScreen(Screen):
@@ -125,7 +133,7 @@ class ChatScreen(Screen):
         await self.send_message(text)
 
     async def send_message(self, text: str) -> None:
-        """Send a user message and get mock response.
+        """Send a user message and get LLM response.
 
         Args:
             text: The user's message text.
@@ -137,7 +145,7 @@ class ChatScreen(Screen):
         # Add user message
         await message_list.add_message(text, is_user=True)
 
-        # Update token count (mock: estimate ~4 chars per token)
+        # Update token count (estimate ~4 chars per token for input)
         user_tokens = max(1, len(text) // 4)
         status_bar.add_tokens(user_tokens)
 
@@ -147,19 +155,123 @@ class ChatScreen(Screen):
         # Create streaming assistant message
         assistant_msg = await message_list.add_streaming_message()
 
-        # Stream mock response (worker handles async)
-        self._stream_mock_response(assistant_msg, spinner, status_bar)
+        # Stream LLM response (worker handles async)
+        self._stream_llm_response(assistant_msg, spinner, status_bar, text)
 
     @work
+    async def _stream_llm_response(
+        self,
+        message: ChatMessage,
+        spinner: PulsingDot,
+        status_bar: HFSStatusBar,
+        user_text: str,
+    ) -> None:
+        """Stream a response from the LLM via Agno Agent.
+
+        Gets a model from ProviderManager and streams the response token-by-token.
+        Falls back to mock response if no providers are configured.
+
+        Args:
+            message: The ChatMessage widget to stream into.
+            spinner: The PulsingDot to stop when done.
+            status_bar: The HFSStatusBar to update token count.
+            user_text: The user's input message.
+        """
+        response_length = 0
+
+        try:
+            # Get provider manager from app
+            provider_manager = self.app.get_provider_manager()
+
+            if provider_manager is None or not provider_manager.available_providers:
+                # No providers configured - fall back to mock
+                await self._stream_mock_response(message, spinner, status_bar)
+                return
+
+            # Get a model from any available provider
+            from agno.agent import Agent
+            from keycycle import NoAvailableKeyError
+
+            try:
+                provider_name, model = provider_manager.get_any_model(
+                    estimated_tokens=2000
+                )
+                logger.info(f"Using {provider_name} for LLM request")
+
+                # Update status bar with model info
+                status_bar.model = f"{provider_name}"
+
+            except NoAvailableKeyError:
+                await message.append_content(
+                    "*All API keys exhausted. Please wait for rate limits to reset "
+                    "or configure additional keys.*\n\n"
+                    "Falling back to mock response...\n\n"
+                )
+                await self._stream_mock_response(message, spinner, status_bar)
+                return
+
+            # Create Agno Agent with the model
+            agent = Agent(
+                model=model,
+                system="You are HFS, a helpful AI assistant for frontend development. "
+                "You help users build hexagonal frontend systems with clean architecture.",
+            )
+
+            # Stream response from LLM
+            async for event in await agent.arun(user_text, stream=True):
+                # Check for content events
+                event_type = getattr(event, "event", None)
+
+                if event_type in ("run_content", "intermediate_run_content"):
+                    content = getattr(event, "content", None)
+                    if content:
+                        text = str(content)
+                        await message.append_content(text)
+                        response_length += len(text)
+
+                elif event_type == "run_completed":
+                    # Extract metrics if available
+                    metrics = getattr(event, "metrics", None)
+                    if metrics:
+                        # Update token count with actual usage
+                        input_tokens = getattr(metrics, "input_tokens", 0) or 0
+                        output_tokens = getattr(metrics, "output_tokens", 0) or 0
+                        total_tokens = input_tokens + output_tokens
+                        if total_tokens > 0:
+                            status_bar.add_tokens(total_tokens)
+                            logger.info(
+                                f"LLM tokens: input={input_tokens}, output={output_tokens}"
+                            )
+                        break
+
+                elif event_type == "run_error":
+                    error_content = getattr(event, "content", "Unknown error")
+                    await message.append_content(f"\n\n*Error: {error_content}*")
+                    break
+
+        except Exception as e:
+            logger.error(f"LLM streaming error: {e}", exc_info=True)
+            await message.append_content(
+                f"\n\n*Error occurred: {type(e).__name__}: {e}*\n\n"
+                "Please try again or check your API configuration."
+            )
+
+        finally:
+            spinner.is_pulsing = False
+            # If we didn't get metrics, estimate tokens from response length
+            if response_length > 0:
+                estimated_tokens = max(1, response_length // 4)
+                status_bar.add_tokens(estimated_tokens)
+
     async def _stream_mock_response(
         self,
         message: ChatMessage,
         spinner: PulsingDot,
         status_bar: HFSStatusBar,
     ) -> None:
-        """Stream a mock response to demonstrate functionality.
+        """Stream a mock response when no LLM providers are available.
 
-        This is a placeholder until real LLM integration. Streams a
+        This is a fallback for when providers aren't configured. Streams a
         sample markdown response character by character.
 
         Args:
@@ -168,7 +280,9 @@ class ChatScreen(Screen):
             status_bar: The HFSStatusBar to update token count.
         """
         # Mock response with markdown to test rendering
-        mock_response = """I'm a mock response demonstrating **markdown rendering**.
+        mock_response = """*LLM providers not configured. Showing mock response.*
+
+I'm a mock response demonstrating **markdown rendering**.
 
 Here's some code:
 
@@ -181,6 +295,11 @@ And a list:
 - Item one
 - Item two
 - Item three
+
+**To enable real LLM responses:**
+1. Set API keys (e.g., `CEREBRAS_API_KEY_1`, `GROQ_API_KEY_1`)
+2. Set key counts (e.g., `NUM_CEREBRAS=1`, `NUM_GROQ=1`)
+3. Restart the application
 
 *Streaming complete!*"""
 
