@@ -13,6 +13,8 @@ from .negotiation_panel import NegotiationPanel, NegotiationSection
 from .spinner import PulsingDot
 from .status_bar import HFSStatusBar
 from .temperature_bar import TemperatureBar
+from .token_breakdown import TokenBreakdown
+from .trace_timeline import TraceTimelineWidget
 
 __all__ = [
     "AgentTreeWidget",
@@ -24,4 +26,6 @@ __all__ = [
     "NegotiationSection",
     "PulsingDot",
     "TemperatureBar",
+    "TokenBreakdown",
+    "TraceTimelineWidget",
 ]
