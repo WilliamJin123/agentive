@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-30)
 ## Current Position
 
 Phase: 9 of 13 (State & Query Layer)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-01 — Completed 09-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-01 — Completed 09-02-PLAN.md
 
-Progress: [███░░░░░░░░░░░░░░░░░] 20% (3/15 plans)
+Progress: [████░░░░░░░░░░░░░░░░] 27% (4/15 plans)
 
 ## Performance Metrics
 
@@ -25,16 +25,16 @@ Progress: [███░░░░░░░░░░░░░░░░░] 20% (3/
 - Duration: 2 days (2026-01-29 to 2026-01-30)
 
 **v1.1 Milestone:**
-- Total plans completed: 3
+- Total plans completed: 4
 - Average duration: 3 min
-- Total execution time: 9 min
+- Total execution time: 13 min
 
 **By Phase (v1.1):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 8 | 2/2 | 6 min | 3 min |
-| 9 | 1/2 | 3 min | 3 min |
+| 9 | 2/2 | 7 min | 3.5 min |
 | 10 | 0/3 | - | - |
 | 11 | 0/2 | - | - |
 | 12 | 0/2 | - | - |
@@ -58,6 +58,9 @@ Recent decisions for v1.1:
 - StateManager subscribes to EventBus('*') for all events
 - Version increments on each event for widget cache invalidation
 - Bounded event history (1000 max) for delta queries
+- QueryInterface wraps StateManager - clean separation between internal state and public API
+- Subscription callbacks dispatched via asyncio.create_task - non-blocking
+- Delta queries scan event history for changed categories
 
 ### Pending Todos
 
@@ -70,12 +73,14 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 09-01-PLAN.md
+Stopped at: Completed 09-02-PLAN.md
 Resume file: None
-Next: Execute 09-02-PLAN.md (QueryInterface)
+Next: Execute Phase 10 (Widget Layer)
 
-**Phase 9 deliverables (ready for Plan 02):**
+**Phase 9 complete:**
 - StateManager: Subscribes to EventBus("*"), processes all events
 - Snapshot models: AgentTree, NegotiationSnapshot, TokenUsageSummary, TraceTimeline
-- Version tracking: Increments on each event for cache invalidation
-- Ready for QueryInterface wrapper (Plan 02)
+- QueryInterface: Typed queries wrapping StateManager
+- Subscriptions: Category-filtered change notifications
+- Delta queries: get_changes_since(version) for efficient updates
+- Ready for Textual widget consumption (Phase 10)
