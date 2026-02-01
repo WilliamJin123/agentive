@@ -9,8 +9,10 @@ from .agent_tree import AgentTreeWidget
 from .chat_input import ChatInput
 from .message import ChatMessage
 from .message_list import MessageList
+from .negotiation_panel import NegotiationPanel, NegotiationSection
 from .spinner import PulsingDot
 from .status_bar import HFSStatusBar
+from .temperature_bar import TemperatureBar
 
 __all__ = [
     "AgentTreeWidget",
@@ -18,5 +20,8 @@ __all__ = [
     "ChatMessage",
     "HFSStatusBar",
     "MessageList",
+    "NegotiationPanel",
+    "NegotiationSection",
     "PulsingDot",
+    "TemperatureBar",
 ]
