@@ -9,5 +9,6 @@ from .chat_input import ChatInput
 from .message import ChatMessage
 from .message_list import MessageList
 from .spinner import PulsingDot
+from .status_bar import HFSStatusBar
 
-__all__ = ["ChatInput", "ChatMessage", "MessageList", "PulsingDot"]
+__all__ = ["ChatInput", "ChatMessage", "HFSStatusBar", "MessageList", "PulsingDot"]

@@ -19,7 +19,7 @@ from textual.app import ComposeResult
 from textual.containers import Container, Vertical
 from textual.screen import Screen
 
-from ..widgets import ChatInput, ChatMessage, MessageList, PulsingDot
+from ..widgets import ChatInput, ChatMessage, HFSStatusBar, MessageList, PulsingDot
 
 
 class ChatScreen(Screen):
@@ -69,14 +69,22 @@ class ChatScreen(Screen):
     def compose(self) -> ComposeResult:
         """Create child widgets for the chat screen.
 
+        Layout (top to bottom):
+            - MessageList: Scrollable container for chat messages
+            - PulsingDot: Streaming indicator
+            - ChatInput: Message input area
+            - HFSStatusBar: Model, tokens, agents info
+
         Yields:
             MessageList: Scrollable container for chat messages.
             Container: Input area with spinner and chat input.
+            HFSStatusBar: Status information at bottom.
         """
         yield MessageList(id="messages")
         with Container(id="input-container"):
             yield PulsingDot(id="spinner")
             yield ChatInput(id="input")
+        yield HFSStatusBar(id="status-bar")
 
     async def on_mount(self) -> None:
         """Called when screen is mounted.
@@ -124,9 +132,14 @@ class ChatScreen(Screen):
         """
         message_list = self.query_one("#messages", MessageList)
         spinner = self.query_one("#spinner", PulsingDot)
+        status_bar = self.query_one("#status-bar", HFSStatusBar)
 
         # Add user message
         await message_list.add_message(text, is_user=True)
+
+        # Update token count (mock: estimate ~4 chars per token)
+        user_tokens = max(1, len(text) // 4)
+        status_bar.add_tokens(user_tokens)
 
         # Start streaming indicator
         spinner.is_pulsing = True
@@ -135,13 +148,14 @@ class ChatScreen(Screen):
         assistant_msg = await message_list.add_streaming_message()
 
         # Stream mock response (worker handles async)
-        self._stream_mock_response(assistant_msg, spinner)
+        self._stream_mock_response(assistant_msg, spinner, status_bar)
 
     @work
     async def _stream_mock_response(
         self,
         message: ChatMessage,
         spinner: PulsingDot,
+        status_bar: HFSStatusBar,
     ) -> None:
         """Stream a mock response to demonstrate functionality.
 
@@ -151,6 +165,7 @@ class ChatScreen(Screen):
         Args:
             message: The ChatMessage widget to stream into.
             spinner: The PulsingDot to stop when done.
+            status_bar: The HFSStatusBar to update token count.
         """
         # Mock response with markdown to test rendering
         mock_response = """I'm a mock response demonstrating **markdown rendering**.
@@ -175,6 +190,9 @@ And a list:
                 await asyncio.sleep(0.02)  # Simulate streaming delay
         finally:
             spinner.is_pulsing = False
+            # Update token count for response (mock: estimate ~4 chars per token)
+            response_tokens = max(1, len(mock_response) // 4)
+            status_bar.add_tokens(response_tokens)
 
     async def show_help(self) -> None:
         """Show help message with available commands."""

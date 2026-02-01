@@ -15,11 +15,14 @@ Usage:
     app.run()
 """
 
+from pathlib import Path
+
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.widgets import Footer
 
 from .screens import ChatScreen
+from .theme import HFS_THEME
 
 
 class HFSApp(App):
@@ -39,6 +42,9 @@ class HFSApp(App):
     TITLE = "HFS"
     SUB_TITLE = "Hexagonal Frontend System"
 
+    # Path to the theme CSS file
+    CSS_PATH = Path(__file__).parent / "styles" / "theme.tcss"
+
     BINDINGS = [
         Binding("ctrl+c", "quit", "Quit", show=True, priority=True),
         Binding("ctrl+q", "quit", "Quit", show=True),
@@ -48,17 +54,13 @@ class HFSApp(App):
         "chat": ChatScreen,
     }
 
-    CSS = """
-    Screen {
-        background: $background;
-    }
-    """
-
     def on_mount(self) -> None:
         """Called when app is mounted.
 
-        Pushes the chat screen as the main interface.
+        Registers the HFS theme and pushes the chat screen.
         """
+        self.register_theme(HFS_THEME)
+        self.theme = "hfs"
         self.push_screen("chat")
 
     def compose(self) -> ComposeResult:
