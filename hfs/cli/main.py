@@ -537,15 +537,18 @@ def main() -> int:
         logging.getLogger().setLevel(logging.DEBUG)
         logging.getLogger('hfs').setLevel(logging.DEBUG)
 
-    # Handle no command
+    # Handle no command - launch interactive REPL
     if args.command is None:
-        print("HFS - Hexagonal Frontend System")
-        print()
-        print("A multi-agent system for generating frontend code through")
-        print("structured negotiation between specialized triads.")
-        print()
-        parser.print_help()
-        return 0
+        # Lazy import to avoid overhead for other commands
+        from tui import HFSApp
+
+        try:
+            app = HFSApp()
+            app.run()
+            return 0
+        except KeyboardInterrupt:
+            # Graceful exit on Ctrl+C (fallback if binding doesn't catch it)
+            return 0
 
     # Dispatch to command handler
     command_handlers = {
