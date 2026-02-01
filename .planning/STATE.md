@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-30)
 ## Current Position
 
 Phase: 10 of 13 (Textual Core)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-01 — Completed 10-03-PLAN.md
+Plan: 5 of 5 in current phase (including gap closure)
+Status: Phase gaps closed
+Last activity: 2026-02-01 — Completed 10-05-PLAN.md (gap closure)
 
-Progress: [██████████░░░░░░░░░░] 47% (7/15 plans)
+Progress: [███████████░░░░░░░░░] 53% (8/15 plans)
 
 ## Performance Metrics
 
@@ -25,9 +25,9 @@ Progress: [██████████░░░░░░░░░░] 47% (7/
 - Duration: 2 days (2026-01-29 to 2026-01-30)
 
 **v1.1 Milestone:**
-- Total plans completed: 7
-- Average duration: 3.4 min
-- Total execution time: 24 min
+- Total plans completed: 8
+- Average duration: 3.3 min
+- Total execution time: 26 min
 
 **By Phase (v1.1):**
 
@@ -35,7 +35,7 @@ Progress: [██████████░░░░░░░░░░] 47% (7/
 |-------|-------|-------|----------|
 | 8 | 2/2 | 6 min | 3 min |
 | 9 | 2/2 | 7 min | 3.5 min |
-| 10 | 3/3 | 11 min | 3.7 min |
+| 10 | 5/5 | 13 min | 2.6 min |
 | 11 | 0/2 | - | - |
 | 12 | 0/2 | - | - |
 | 13 | 0/4 | - | - |
@@ -72,6 +72,8 @@ Recent decisions for v1.1:
 - Triad colors: blue (hierarchical), purple (dialectic), green (consensus)
 - External .tcss file for comprehensive component styling
 - Reactive attributes for status bar auto-updates
+- Reverse-i-search with bash-style prompt for history search
+- Key event interception via on_key for search mode
 
 ### Pending Todos
 
@@ -84,9 +86,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 10-03-PLAN.md
+Stopped at: Completed 10-05-PLAN.md (gap closure)
 Resume file: None
-Next: Execute 11-01-PLAN.md
+Next: Re-verify Phase 10, then execute 11-01-PLAN.md
 
 **Phase 10 complete - deliverables:**
 - HFSApp with Textual foundation (10-01)
@@ -95,3 +97,7 @@ Next: Execute 11-01-PLAN.md
 - HFS_THEME with amber primary and triad colors (10-03)
 - HFSStatusBar with reactive model/token/agent display (10-03)
 - Comprehensive Textual CSS theming (10-03)
+- Fixed TUI import path in main.py (10-04)
+- Lazy ProviderManager initialization (10-04)
+- Command history with up/down arrows (10-05)
+- Ctrl+R fuzzy search through history (10-05)
