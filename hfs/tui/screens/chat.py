@@ -23,7 +23,8 @@ from textual.containers import Container, Vertical
 from textual.screen import Screen
 
 from hfs.user_config import ConfigLoader
-from ..widgets import ChatInput, ChatMessage, HFSStatusBar, MessageList, PulsingDot
+from ..widgets import ChatInput, ChatMessage, HFSStatusBar, MessageList, PulsingDot, VimChatInput
+from ..widgets.vim_input import VimMode
 
 if TYPE_CHECKING:
     from hfs.agno.providers import ProviderManager
@@ -80,7 +81,7 @@ class ChatScreen(Screen):
         Layout (top to bottom):
             - MessageList: Scrollable container for chat messages
             - PulsingDot: Streaming indicator
-            - ChatInput: Message input area
+            - ChatInput or VimChatInput: Message input area (based on config)
             - HFSStatusBar: Model, tokens, agents info
 
         Yields:
@@ -91,15 +92,35 @@ class ChatScreen(Screen):
         yield MessageList(id="messages")
         with Container(id="input-container"):
             yield PulsingDot(id="spinner")
-            yield ChatInput(id="input")
+            # Select input widget based on keybinding mode
+            config = self.app.get_user_config()
+            if config.keybinding_mode == "vim":
+                yield VimChatInput(id="input")
+            else:
+                yield ChatInput(id="input")
         yield HFSStatusBar(id="status-bar")
 
     async def on_mount(self) -> None:
         """Called when screen is mounted.
 
-        Sets initial focus to the input field.
+        Sets initial focus to the input field and initializes vim mode indicator.
         """
-        self.query_one("#input", ChatInput).focus()
+        input_widget = self.query_one("#input")
+        input_widget.focus()
+
+        # Initialize vim mode indicator if using vim mode
+        if hasattr(input_widget, "mode"):
+            status_bar = self.query_one("#status-bar", HFSStatusBar)
+            status_bar.vim_mode = input_widget.mode.name
+
+    def on_vim_chat_input_mode_changed(self, event: VimChatInput.ModeChanged) -> None:
+        """Handle vim mode changes to update status bar.
+
+        Args:
+            event: The ModeChanged event with the new vim mode.
+        """
+        status_bar = self.query_one("#status-bar", HFSStatusBar)
+        status_bar.vim_mode = event.mode.name
 
     async def on_chat_input_submitted(self, event: ChatInput.Submitted) -> None:
         """Handle chat input submission.
@@ -331,6 +352,11 @@ And a list:
 **Input Tips**
 - Press **Enter** to send a message
 - Press **Shift+Enter** to insert a new line
+
+**Vim Mode**
+Set `keybinding_mode: vim` in config for modal editing.
+- NORMAL mode: h/j/k/l navigation, i/a/A/I to insert
+- INSERT mode: Type normally, Escape to exit
 """
         await message_list.add_message(help_text, is_system=True)
 
