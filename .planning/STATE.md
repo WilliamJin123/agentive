@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-30)
 ## Current Position
 
 Phase: 10 of 13 (Textual Core)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-31 — Completed 10-01-PLAN.md
+Last activity: 2026-02-01 — Completed 10-02-PLAN.md
 
-Progress: [██████░░░░░░░░░░░░░░] 33% (5/15 plans)
+Progress: [████████░░░░░░░░░░░░] 40% (6/15 plans)
 
 ## Performance Metrics
 
@@ -25,9 +25,9 @@ Progress: [██████░░░░░░░░░░░░░░] 33% (5/
 - Duration: 2 days (2026-01-29 to 2026-01-30)
 
 **v1.1 Milestone:**
-- Total plans completed: 5
-- Average duration: 3.4 min
-- Total execution time: 17 min
+- Total plans completed: 6
+- Average duration: 3.3 min
+- Total execution time: 20 min
 
 **By Phase (v1.1):**
 
@@ -35,7 +35,7 @@ Progress: [██████░░░░░░░░░░░░░░] 33% (5/
 |-------|-------|-------|----------|
 | 8 | 2/2 | 6 min | 3 min |
 | 9 | 2/2 | 7 min | 3.5 min |
-| 10 | 1/3 | 4 min | 4 min |
+| 10 | 2/3 | 7 min | 3.5 min |
 | 11 | 0/2 | - | - |
 | 12 | 0/2 | - | - |
 | 13 | 0/4 | - | - |
@@ -64,6 +64,10 @@ Recent decisions for v1.1:
 - Lazy import of TUI module for CLI performance
 - Dual quit bindings (Ctrl+C, Ctrl+Q) for robustness
 - TUI module structure: hfs/tui/ with relative imports
+- ChatInput extends TextArea for multi-line auto-grow
+- Enter submits message, Shift+Enter inserts newline
+- Markdown widget for message content rendering
+- anchor() pattern for auto-scroll in MessageList
 
 ### Pending Todos
 
@@ -75,14 +79,14 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-31
-Stopped at: Completed 10-01-PLAN.md
+Last session: 2026-02-01
+Stopped at: Completed 10-02-PLAN.md
 Resume file: None
-Next: Execute 10-02-PLAN.md
+Next: Execute 10-03-PLAN.md (or continue parallel execution)
 
-**Phase 10-01 deliverables (ready for 10-02):**
-- HFSApp class extending textual.app.App
-- hfs/tui/ package with __init__.py and app.py
-- CLI launches REPL when run with no arguments
-- Quit bindings (Ctrl+C, Ctrl+Q) working
-- Textual, Rich, prompt_toolkit dependencies installed
+**Phase 10-02 deliverables (ready for 10-03):**
+- ChatInput, ChatMessage, MessageList, PulsingDot widgets
+- ChatScreen with slash commands /help, /clear, /exit
+- Mock streaming response demonstrating markdown
+- Smart scroll behavior with anchor()
+- Pulsing dot indicator during streaming
