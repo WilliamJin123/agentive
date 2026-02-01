@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-30)
 ## Current Position
 
 Phase: 12 of 13 (User Experience)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-01 - Completed 12-01-PLAN.md
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-02-01 - Completed 12-03-PLAN.md
 
-Progress: [██████████████░░░░░░] 71% (12/17 plans)
+Progress: [████████████████████] 100% (15/15 plans through phase 12)
 
 ## Performance Metrics
 
@@ -37,7 +37,7 @@ Progress: [██████████████░░░░░░] 71% (12
 | 9 | 2/2 | 7 min | 3.5 min |
 | 10 | 5/5 | 13 min | 2.6 min |
 | 11 | 2/2 | 8 min | 4 min |
-| 12 | 1/2 | 4 min | 4 min |
+| 12 | 3/3 | 12 min | 4 min |
 | 13 | 0/4 | - | - |
 
 ## Accumulated Context
@@ -87,6 +87,9 @@ Recent decisions for v1.1:
 - New hfs/user_config/ module for user preferences (separate from hfs/config/ YAML files)
 - ruamel.yaml for writing (preserves comments), PyYAML for reading
 - ConfigLoader instance per operation (simple, no stale config issues)
+- VimChatInput with NORMAL/INSERT modes for modal editing (12-03)
+- ModeChanged message for status bar vim mode indicator (12-03)
+- Conditional widget selection based on keybinding_mode config (12-03)
 
 ### Pending Todos
 
@@ -99,13 +102,16 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 12-01-PLAN.md
+Stopped at: Completed 12-03-PLAN.md
 Resume file: None
-Next: 12-02-PLAN.md (keybinding modes)
+Next: Phase 13 (polish and packaging)
 
-**Phase 12 in progress - deliverables:**
+**Phase 12 complete - deliverables:**
 - UserConfig Pydantic model with output_mode and keybinding_mode (12-01)
 - ConfigLoader with layered precedence (env > project > global) (12-01)
 - /config command for viewing and editing settings (12-01)
 - /mode shorthand for output mode switching (12-01)
 - App loads user config at startup (12-01)
+- Tab completion for slash commands (12-02)
+- VimChatInput with modal editing (12-03)
+- Status bar vim mode indicator (12-03)
