@@ -22,8 +22,12 @@ from textual.app import ComposeResult
 from textual.containers import Container, Vertical
 from textual.screen import Screen
 
+from textual import on
+from textual.events import Key
+from textual.widgets import TextArea
+
 from hfs.user_config import ConfigLoader
-from ..widgets import ChatInput, ChatMessage, HFSStatusBar, MessageList, PulsingDot, VimChatInput
+from ..widgets import ChatInput, ChatMessage, CommandCompleter, HFSStatusBar, MessageList, PulsingDot, VimChatInput
 from ..widgets.vim_input import VimMode
 
 if TYPE_CHECKING:
@@ -58,6 +62,7 @@ class ChatScreen(Screen):
         layout: grid;
         grid-size: 1;
         grid-rows: 1fr auto auto;
+        layers: base overlay;
     }
 
     ChatScreen > #input-container {
@@ -74,6 +79,9 @@ class ChatScreen(Screen):
         height: auto;
     }
     """
+
+    # TODO: Wire output_mode to widget visibility when agent widgets added to ChatScreen
+    # Currently output_mode is stored as preference but has no visual effect on chat view
 
     def compose(self) -> ComposeResult:
         """Create child widgets for the chat screen.
@@ -98,6 +106,7 @@ class ChatScreen(Screen):
                 yield VimChatInput(id="input")
             else:
                 yield ChatInput(id="input")
+        yield CommandCompleter(target="input", id="completer")
         yield HFSStatusBar(id="status-bar")
 
     async def on_mount(self) -> None:
@@ -121,6 +130,72 @@ class ChatScreen(Screen):
         """
         status_bar = self.query_one("#status-bar", HFSStatusBar)
         status_bar.vim_mode = event.mode.name
+
+    @on(TextArea.Changed, "#input")
+    def on_input_changed(self, event: TextArea.Changed) -> None:
+        """Handle input text changes for tab completion.
+
+        Shows completion dropdown when user types slash commands.
+
+        Args:
+            event: The Changed event with the new text.
+        """
+        completer = self.query_one("#completer", CommandCompleter)
+        text = event.text_area.text
+
+        # Only show completions for text starting with /
+        if text.startswith("/"):
+            completer.show_completions(text)
+        else:
+            completer.hide_completions()
+
+    @on(CommandCompleter.CompletionAccepted)
+    def on_completion_accepted(self, event: CommandCompleter.CompletionAccepted) -> None:
+        """Handle completion selection.
+
+        Updates the input with the selected completion text.
+
+        Args:
+            event: The CompletionAccepted event with the completion text.
+        """
+        input_widget = self.query_one("#input")
+        input_widget.text = event.text
+        # Move cursor to end
+        if hasattr(input_widget, "_move_cursor_to_end"):
+            input_widget._move_cursor_to_end()
+        input_widget.focus()
+
+    def on_key(self, event: Key) -> None:
+        """Handle key events for tab completion navigation.
+
+        Intercepts Tab, Up, Down, Escape keys when completion dropdown is visible
+        to allow navigation and selection of completions.
+
+        Args:
+            event: The key event to process.
+        """
+        completer = self.query_one("#completer", CommandCompleter)
+
+        if not completer.visible:
+            return  # Let events pass through normally
+
+        # Handle completion navigation keys
+        if event.key == "tab":
+            completer.action_accept()
+            event.prevent_default()
+            event.stop()
+        elif event.key == "up":
+            completer.action_cursor_up()
+            event.prevent_default()
+            event.stop()
+        elif event.key == "down":
+            completer.action_cursor_down()
+            event.prevent_default()
+            event.stop()
+        elif event.key == "escape":
+            completer.action_hide()
+            event.prevent_default()
+            event.stop()
 
     async def on_chat_input_submitted(self, event: ChatInput.Submitted) -> None:
         """Handle chat input submission.
@@ -343,15 +418,25 @@ And a list:
 |---------|-------------|
 | `/help` | Show this help message |
 | `/clear` | Clear all messages |
-| `/inspect` | Open inspection mode |
 | `/config` | View current configuration |
 | `/config set key value` | Change a setting |
 | `/mode compact` or `/mode verbose` | Switch output mode |
+| `/inspect` | Open inspection mode |
 | `/exit` | Exit the application |
 
 **Input Tips**
 - Press **Enter** to send a message
 - Press **Shift+Enter** to insert a new line
+- Press **Tab** to complete commands (type `/` first)
+- Press **Up/Down** to navigate history
+- Press **Ctrl+R** to search history
+
+**Keybindings (Standard/Emacs mode)**
+- **Ctrl+A**: Move to beginning of line
+- **Ctrl+E**: Move to end of line
+- **Ctrl+K**: Delete to end of line
+- **Ctrl+U**: Delete to beginning of line
+- **Ctrl+W**: Delete word before cursor
 
 **Vim Mode**
 Set `keybinding_mode: vim` in config for modal editing.
