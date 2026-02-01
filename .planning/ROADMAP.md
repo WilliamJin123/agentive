@@ -131,15 +131,16 @@ Plans:
 **Success Criteria** (what must be TRUE):
 1. Config file loads from ~/.hfs/config.yaml or .hfs/config.yaml with env vars for API keys
 2. /config command allows viewing and editing settings
-3. Compact and verbose output modes toggle via command or config
-4. Vim and Emacs keybinding modes work for input
+3. Compact and verbose output modes toggle via command or config (visibility deferred until agent widgets in ChatScreen)
+4. Vim and Emacs keybinding modes work for input (standard mode = Emacs, built into TextArea)
 5. Tab completion works for slash commands and file paths
 
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
 - [ ] 12-01-PLAN.md — Configuration system and /config command
-- [ ] 12-02-PLAN.md — Output modes and input keybindings
+- [ ] 12-02-PLAN.md — Tab completion and keybinding documentation
+- [ ] 12-03-PLAN.md — Vim mode modal editing
 
 ---
 
@@ -176,10 +177,10 @@ Plans:
 | 9. State & Query Layer | v1.1 | 2/2 | ✓ Complete | 2026-02-01 |
 | 10. Textual Core | v1.1 | 5/5 | ✓ Complete | 2026-02-01 |
 | 11. Agent Visibility & Inspection | v1.1 | 2/2 | ✓ Complete | 2026-02-01 |
-| 12. User Experience | v1.1 | 0/2 | Not started | - |
+| 12. User Experience | v1.1 | 0/3 | Not started | - |
 | 13. Persistence & Plugins | v1.1 | 0/4 | Not started | - |
 
-**Total:** 11/17 plans complete (65%)
+**Total:** 11/18 plans complete (61%)
 
 ---
 *Roadmap created: 2026-01-30*
