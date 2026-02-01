@@ -207,16 +207,22 @@ class ChatInput(TextArea):
             self._show_search_prompt()
 
     def on_key(self, event: Key) -> None:
-        """Handle key events during search mode.
+        """Handle key events for submit and search mode.
 
-        In search mode, intercepts keypresses to build search term,
-        navigate matches, or exit search. Regular input is blocked.
+        Intercepts Enter key to submit message (preventing TextArea's default
+        newline insertion). In search mode, intercepts keypresses to build
+        search term, navigate matches, or exit search.
 
         Args:
             event: The key event to process.
         """
+        # Handle Enter key for submit (outside search mode)
+        # Must intercept here to prevent TextArea's default newline insertion
         if not self._search_mode:
-            return  # Let normal handling proceed
+            if event.key == "enter" and not event.shift:
+                event.prevent_default()
+                self.action_submit()
+            return
 
         if event.key == "escape":
             self._exit_search_mode(restore=True)
