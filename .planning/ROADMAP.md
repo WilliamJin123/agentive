@@ -31,7 +31,7 @@ See: .planning/MILESTONES.md for v1 summary.
 - [x] **Phase 9: State & Query Layer** - State snapshots, query interface, JSON serialization
 - [x] **Phase 10: Textual Core** - Entry point, chat REPL, streaming, visual theme
 - [x] **Phase 11: Agent Visibility & Inspection** - Agent tree widget, negotiation panel, inspection mode
-- [ ] **Phase 12: User Experience** - Configuration, output modes, input keybindings
+- [x] **Phase 12: User Experience** - Configuration, output modes, input keybindings
 - [ ] **Phase 13: Persistence & Plugins** - Sessions, checkpoints, export, plugin system
 
 ## Phase Details
@@ -138,9 +138,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 12-01-PLAN.md — Configuration system and /config command
-- [ ] 12-02-PLAN.md — Tab completion and keybinding documentation
-- [ ] 12-03-PLAN.md — Vim mode modal editing
+- [x] 12-01-PLAN.md — Configuration system and /config command
+- [x] 12-02-PLAN.md — Tab completion and keybinding documentation
+- [x] 12-03-PLAN.md — Vim mode modal editing
 
 ---
 
@@ -177,11 +177,11 @@ Plans:
 | 9. State & Query Layer | v1.1 | 2/2 | ✓ Complete | 2026-02-01 |
 | 10. Textual Core | v1.1 | 5/5 | ✓ Complete | 2026-02-01 |
 | 11. Agent Visibility & Inspection | v1.1 | 2/2 | ✓ Complete | 2026-02-01 |
-| 12. User Experience | v1.1 | 0/3 | Not started | - |
+| 12. User Experience | v1.1 | 3/3 | ✓ Complete | 2026-02-01 |
 | 13. Persistence & Plugins | v1.1 | 0/4 | Not started | - |
 
-**Total:** 11/18 plans complete (61%)
+**Total:** 14/18 plans complete (78%)
 
 ---
 *Roadmap created: 2026-01-30*
-*Last updated: 2026-02-01*
+*Last updated: 2026-02-01 (Phase 12 complete)*
