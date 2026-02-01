@@ -180,3 +180,106 @@ class ChatInput(TextArea):
     def action_newline(self) -> None:
         """Handle Shift+Enter - insert a newline at cursor position."""
         self.insert("\n")
+
+    def action_history_search(self) -> None:
+        """Start or cycle reverse history search (Ctrl+R).
+
+        First press enters search mode. Subsequent presses cycle through
+        matching history entries. Type to filter, Enter to select, Escape to cancel.
+        """
+        if not self._history:
+            return
+
+        if self._search_mode:
+            # Already in search - cycle to next match
+            if self._search_matches and len(self._search_matches) > 1:
+                self._search_match_index = (
+                    self._search_match_index + 1
+                ) % len(self._search_matches)
+                self._show_search_match()
+        else:
+            # Enter search mode
+            self._search_mode = True
+            self._current_input = self.text  # Save current input
+            self._search_term = ""
+            self._update_search_matches()
+            self._search_match_index = 0
+            self._show_search_prompt()
+
+    def on_key(self, event: Key) -> None:
+        """Handle key events during search mode.
+
+        In search mode, intercepts keypresses to build search term,
+        navigate matches, or exit search. Regular input is blocked.
+
+        Args:
+            event: The key event to process.
+        """
+        if not self._search_mode:
+            return  # Let normal handling proceed
+
+        if event.key == "escape":
+            self._exit_search_mode(restore=True)
+            event.prevent_default()
+        elif event.key == "enter":
+            self._exit_search_mode(restore=False)
+            event.prevent_default()
+        elif event.key == "backspace":
+            if self._search_term:
+                self._search_term = self._search_term[:-1]
+                self._update_search_matches()
+                self._show_search_prompt()
+            event.prevent_default()
+        elif event.character and len(event.character) == 1 and event.character.isprintable():
+            self._search_term += event.character
+            self._update_search_matches()
+            self._show_search_prompt()
+            event.prevent_default()
+
+    def _update_search_matches(self) -> None:
+        """Find history entries matching search term (case-insensitive)."""
+        if not self._search_term:
+            # Show all history items (most recent first)
+            self._search_matches = list(range(len(self._history) - 1, -1, -1))
+        else:
+            term = self._search_term.lower()
+            # Search from most recent to oldest
+            self._search_matches = [
+                i for i in range(len(self._history) - 1, -1, -1)
+                if term in self._history[i].lower()
+            ]
+        self._search_match_index = 0
+
+    def _show_search_prompt(self) -> None:
+        """Update text to show search prompt and current match."""
+        if self._search_matches:
+            match = self._history[self._search_matches[self._search_match_index]]
+            # Truncate long matches for display
+            display_match = match[:50] + "..." if len(match) > 50 else match
+            self.text = f"(reverse-i-search)`{self._search_term}': {display_match}"
+        else:
+            self.text = f"(reverse-i-search)`{self._search_term}': "
+
+    def _show_search_match(self) -> None:
+        """Show current search match in the prompt."""
+        if self._search_matches:
+            match = self._history[self._search_matches[self._search_match_index]]
+            display_match = match[:50] + "..." if len(match) > 50 else match
+            self.text = f"(reverse-i-search)`{self._search_term}': {display_match}"
+
+    def _exit_search_mode(self, restore: bool) -> None:
+        """Exit search mode.
+
+        Args:
+            restore: If True, restore previous input. If False, use selected match.
+        """
+        self._search_mode = False
+        if restore:
+            self.text = self._current_input
+        elif self._search_matches:
+            self.text = self._history[self._search_matches[self._search_match_index]]
+            self._move_cursor_to_end()
+        else:
+            self.text = self._current_input
+        self._search_term = ""
+        self._search_matches = []
