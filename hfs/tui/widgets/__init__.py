@@ -2,11 +2,12 @@
 
 This package provides custom widgets for the HFS terminal UI, including
 the chat input, message display, message list container, streaming
-indicator, and agent visibility widgets.
+indicator, agent visibility widgets, and tab completion.
 """
 
 from .agent_tree import AgentTreeWidget
 from .chat_input import ChatInput
+from .completers import CommandCompleter
 from .message import ChatMessage
 from .message_list import MessageList
 from .negotiation_panel import NegotiationPanel, NegotiationSection
@@ -21,6 +22,7 @@ __all__ = [
     "AgentTreeWidget",
     "ChatInput",
     "ChatMessage",
+    "CommandCompleter",
     "HFSStatusBar",
     "MessageList",
     "NegotiationPanel",
