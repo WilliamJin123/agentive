@@ -45,7 +45,7 @@ class NegotiationSection(Vertical):
         height: auto;
         margin: 0 1;
         padding: 1;
-        border: solid $hfs-border;
+        border: solid #404040;
     }
 
     NegotiationSection.-contested {

@@ -44,7 +44,7 @@ class AgentTreeWidget(Tree[AgentNode]):
     }
 
     AgentTreeWidget > .tree--guides {
-        color: $hfs-border;
+        color: #404040;
     }
 
     AgentTreeWidget > .tree--cursor {

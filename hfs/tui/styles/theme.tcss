@@ -56,19 +56,19 @@ ChatMessage {
 /* User messages - subtle surface background */
 ChatMessage.user-message {
     background: $surface;
-    border-left: solid $secondary 2;
+    border-left: solid $secondary;
 }
 
 /* Assistant messages - left border accent */
 ChatMessage.assistant-message {
     background: $panel;
-    border-left: solid $primary 2;
+    border-left: solid $primary;
 }
 
 /* System messages - italic with warning color accent */
 ChatMessage.system-message {
     background: $surface;
-    border-left: solid $warning 2;
+    border-left: solid $warning;
 }
 
 /* Message role labels */
@@ -105,7 +105,7 @@ ChatInput {
     height: auto;
     max-height: 10;
     min-height: 3;
-    border: solid $hfs-border;
+    border: solid #404040;
     padding: 0 1;
     margin: 0 1;
     background: $surface;
@@ -125,7 +125,7 @@ HFSStatusBar {
     dock: bottom;
     background: $surface;
     padding: 0 1;
-    border-top: solid $hfs-border;
+    border-top: solid #404040;
 }
 
 .status-section {
@@ -139,7 +139,7 @@ HFSStatusBar {
 }
 
 .status-tokens {
-    color: $hfs-muted;
+    color: #737373;
 }
 
 .status-agents {
@@ -168,20 +168,20 @@ PulsingDot.active {
 
 /* Hierarchical triad elements - blue */
 .triad-hierarchical {
-    color: $hfs-hierarchical;
-    border-left: solid $hfs-hierarchical 2;
+    color: #3B82F6;
+    border-left: solid #3B82F6;
 }
 
 /* Dialectic triad elements - purple */
 .triad-dialectic {
-    color: $hfs-dialectic;
-    border-left: solid $hfs-dialectic 2;
+    color: #A855F7;
+    border-left: solid #A855F7;
 }
 
 /* Consensus triad elements - green */
 .triad-consensus {
-    color: $hfs-consensus;
-    border-left: solid $hfs-consensus 2;
+    color: #22C55E;
+    border-left: solid #22C55E;
 }
 
 /* ==========================================================================
@@ -196,7 +196,7 @@ Markdown {
 /* Code blocks in messages */
 MarkdownFence {
     background: $background;
-    border: solid $hfs-border;
+    border: solid #404040;
     padding: 1;
     margin: 1 0;
 }
@@ -270,7 +270,7 @@ InspectionScreen {
 #inspection-sidebar {
     width: 16;
     background: $surface;
-    border-right: solid $hfs-border;
+    border-right: solid #404040;
     padding: 1;
 }
 

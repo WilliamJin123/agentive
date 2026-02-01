@@ -38,7 +38,7 @@ class HFSStatusBar(Horizontal):
         dock: bottom;
         background: $surface;
         padding: 0 1;
-        border-top: solid $hfs-border;
+        border-top: solid #404040;
     }
 
     HFSStatusBar > .status-section {
@@ -53,7 +53,7 @@ class HFSStatusBar(Horizontal):
     }
 
     HFSStatusBar > .status-tokens {
-        color: $hfs-muted;
+        color: #737373;
     }
 
     HFSStatusBar > .status-agents {

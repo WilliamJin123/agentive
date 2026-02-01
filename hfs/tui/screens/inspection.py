@@ -63,7 +63,7 @@ class InspectionScreen(Screen):
     InspectionScreen #inspection-sidebar {
         width: 16;
         background: $surface;
-        border-right: solid $hfs-border;
+        border-right: solid #404040;
         padding: 1;
     }
 

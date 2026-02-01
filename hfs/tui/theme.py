@@ -34,6 +34,10 @@ HFS_THEME = Theme(
     error="#EF4444",         # Red error
     success="#22C55E",       # Green success
     dark=True,
+    # NOTE: Custom variables defined here are NOT accessible from external .tcss files.
+    # Textual only exposes built-in theme variables ($primary, $surface, etc.) to CSS.
+    # These values are kept here for reference and programmatic access only.
+    # The actual colors are hardcoded directly in CSS files.
     variables={
         # Triad type colors for visual distinction
         "hfs-hierarchical": "#3B82F6",   # Blue - structured/top-down

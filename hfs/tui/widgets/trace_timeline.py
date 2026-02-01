@@ -48,7 +48,7 @@ class TraceTimelineWidget(Vertical):
     }
 
     TraceTimelineWidget .timeline-empty {
-        color: $hfs-muted;
+        color: #737373;
     }
     """
 
