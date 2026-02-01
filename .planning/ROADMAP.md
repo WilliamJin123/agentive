@@ -28,7 +28,7 @@ See: .planning/MILESTONES.md for v1 summary.
 **Milestone Goal:** Rich terminal UI with full observability into multi-agent negotiation, preparing for future web UI.
 
 - [x] **Phase 8: Event Foundation** - Event models, async event bus, OTel bridge
-- [ ] **Phase 9: State & Query Layer** - State snapshots, query interface, JSON serialization
+- [x] **Phase 9: State & Query Layer** - State snapshots, query interface, JSON serialization
 - [ ] **Phase 10: Textual Core** - Entry point, chat REPL, streaming, visual theme
 - [ ] **Phase 11: Agent Visibility & Inspection** - Agent tree widget, negotiation panel, inspection mode
 - [ ] **Phase 12: User Experience** - Configuration, output modes, input keybindings
@@ -72,8 +72,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — Snapshot models and StateManager
-- [ ] 09-02-PLAN.md — Query interface implementation
+- [x] 09-01-PLAN.md — Snapshot models and StateManager
+- [x] 09-02-PLAN.md — Query interface implementation
 
 ---
 
@@ -171,14 +171,14 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 8. Event Foundation | v1.1 | 2/2 | ✓ Complete | 2026-01-31 |
-| 9. State & Query Layer | v1.1 | 0/2 | Not started | - |
+| 9. State & Query Layer | v1.1 | 2/2 | ✓ Complete | 2026-02-01 |
 | 10. Textual Core | v1.1 | 0/3 | Not started | - |
 | 11. Agent Visibility & Inspection | v1.1 | 0/2 | Not started | - |
 | 12. User Experience | v1.1 | 0/2 | Not started | - |
 | 13. Persistence & Plugins | v1.1 | 0/4 | Not started | - |
 
-**Total:** 2/15 plans complete (13%)
+**Total:** 4/15 plans complete (27%)
 
 ---
 *Roadmap created: 2026-01-30*
-*Last updated: 2026-01-31*
+*Last updated: 2026-02-01*

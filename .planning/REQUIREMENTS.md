@@ -151,12 +151,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | ABS-01 | Phase 8 | Complete |
 | ABS-07 | Phase 8 | Complete |
-| ABS-02 | Phase 9 | Pending |
-| ABS-03 | Phase 9 | Pending |
-| ABS-04 | Phase 9 | Pending |
-| ABS-05 | Phase 9 | Pending |
-| ABS-06 | Phase 9 | Pending |
-| ABS-08 | Phase 9 | Pending |
+| ABS-02 | Phase 9 | Complete |
+| ABS-03 | Phase 9 | Complete |
+| ABS-04 | Phase 9 | Complete |
+| ABS-05 | Phase 9 | Complete |
+| ABS-06 | Phase 9 | Complete |
+| ABS-08 | Phase 9 | Complete |
 | ENTRY-01 | Phase 10 | Pending |
 | ENTRY-02 | Phase 10 | Pending |
 | ENTRY-03 | Phase 10 | Pending |
@@ -221,4 +221,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-30*
-*Last updated: 2026-01-31 — Phase 8 requirements complete*
+*Last updated: 2026-02-01 — Phase 9 requirements complete*
