@@ -30,7 +30,7 @@ See: .planning/MILESTONES.md for v1 summary.
 - [x] **Phase 8: Event Foundation** - Event models, async event bus, OTel bridge
 - [x] **Phase 9: State & Query Layer** - State snapshots, query interface, JSON serialization
 - [x] **Phase 10: Textual Core** - Entry point, chat REPL, streaming, visual theme
-- [ ] **Phase 11: Agent Visibility & Inspection** - Agent tree widget, negotiation panel, inspection mode
+- [x] **Phase 11: Agent Visibility & Inspection** - Agent tree widget, negotiation panel, inspection mode
 - [ ] **Phase 12: User Experience** - Configuration, output modes, input keybindings
 - [ ] **Phase 13: Persistence & Plugins** - Sessions, checkpoints, export, plugin system
 
@@ -117,8 +117,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — Agent tree and negotiation widgets
-- [ ] 11-02-PLAN.md — Inspection mode with navigation
+- [x] 11-01-PLAN.md — Agent tree and negotiation widgets
+- [x] 11-02-PLAN.md — Inspection mode with navigation
 
 ---
 
@@ -135,11 +135,11 @@ Plans:
 4. Vim and Emacs keybinding modes work for input
 5. Tab completion works for slash commands and file paths
 
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 12-01: Configuration system and /config command
-- [ ] 12-02: Output modes and input keybindings
+- [ ] 12-01-PLAN.md — Configuration system and /config command
+- [ ] 12-02-PLAN.md — Output modes and input keybindings
 
 ---
 
@@ -175,11 +175,11 @@ Plans:
 | 8. Event Foundation | v1.1 | 2/2 | ✓ Complete | 2026-01-31 |
 | 9. State & Query Layer | v1.1 | 2/2 | ✓ Complete | 2026-02-01 |
 | 10. Textual Core | v1.1 | 5/5 | ✓ Complete | 2026-02-01 |
-| 11. Agent Visibility & Inspection | v1.1 | 0/2 | Not started | - |
+| 11. Agent Visibility & Inspection | v1.1 | 2/2 | ✓ Complete | 2026-02-01 |
 | 12. User Experience | v1.1 | 0/2 | Not started | - |
 | 13. Persistence & Plugins | v1.1 | 0/4 | Not started | - |
 
-**Total:** 9/17 plans complete (53%)
+**Total:** 11/17 plans complete (65%)
 
 ---
 *Roadmap created: 2026-01-30*
