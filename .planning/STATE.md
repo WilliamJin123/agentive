@@ -87,6 +87,9 @@ Recent decisions for v1.1:
 - New hfs/user_config/ module for user preferences (separate from hfs/config/ YAML files)
 - ruamel.yaml for writing (preserves comments), PyYAML for reading
 - ConfigLoader instance per operation (simple, no stale config issues)
+- Custom CommandCompleter over textual-autocomplete (only supports Input, not TextArea) (12-02)
+- Screen-level key interception for completion navigation (12-02)
+- Standard mode = Emacs mode (TextArea default keybindings) (12-02)
 - VimChatInput with NORMAL/INSERT modes for modal editing (12-03)
 - ModeChanged message for status bar vim mode indicator (12-03)
 - Conditional widget selection based on keybinding_mode config (12-03)
