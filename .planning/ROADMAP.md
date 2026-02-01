@@ -114,11 +114,11 @@ Plans:
 4. Inspection shows token/cost breakdown by agent and phase with visual trace timeline
 5. User can navigate between inspection views (tree, negotiation, tokens, trace)
 
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 11-01: Agent tree and negotiation widgets
-- [ ] 11-02: Inspection mode with navigation
+- [ ] 11-01-PLAN.md — Agent tree and negotiation widgets
+- [ ] 11-02-PLAN.md — Inspection mode with navigation
 
 ---
 
