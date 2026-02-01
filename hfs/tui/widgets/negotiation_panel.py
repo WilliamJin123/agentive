@@ -193,12 +193,15 @@ class NegotiationPanel(VerticalScroll):
         """Update the panel with a new negotiation snapshot.
 
         Clears existing content and rebuilds with new snapshot data.
+        If the panel is not yet mounted, stores the snapshot for compose().
 
         Args:
             snapshot: The new negotiation snapshot to display.
         """
         self._snapshot = snapshot
-        self._rebuild()
+        # Only rebuild if mounted (otherwise compose() will use the snapshot)
+        if self.is_attached:
+            self._rebuild()
 
     def _rebuild(self) -> None:
         """Rebuild panel content from current snapshot."""
