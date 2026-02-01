@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-30)
 
 **Core value:** Rich terminal UI with full observability into multi-agent negotiation
-**Current focus:** Phase 9 - State & Query Layer
+**Current focus:** Phase 10 - Textual Core
 
 ## Current Position
 
 Phase: 10 of 13 (Textual Core)
-Plan: 0 of 3 in current phase
-Status: Ready to plan
-Last activity: 2026-02-01 — Phase 9 complete, verified
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-31 — Completed 10-01-PLAN.md
 
-Progress: [█████░░░░░░░░░░░░░░░] 27% (4/15 plans)
+Progress: [██████░░░░░░░░░░░░░░] 33% (5/15 plans)
 
 ## Performance Metrics
 
@@ -25,9 +25,9 @@ Progress: [█████░░░░░░░░░░░░░░░] 27% (4/
 - Duration: 2 days (2026-01-29 to 2026-01-30)
 
 **v1.1 Milestone:**
-- Total plans completed: 4
-- Average duration: 3 min
-- Total execution time: 13 min
+- Total plans completed: 5
+- Average duration: 3.4 min
+- Total execution time: 17 min
 
 **By Phase (v1.1):**
 
@@ -35,7 +35,7 @@ Progress: [█████░░░░░░░░░░░░░░░] 27% (4/
 |-------|-------|-------|----------|
 | 8 | 2/2 | 6 min | 3 min |
 | 9 | 2/2 | 7 min | 3.5 min |
-| 10 | 0/3 | - | - |
+| 10 | 1/3 | 4 min | 4 min |
 | 11 | 0/2 | - | - |
 | 12 | 0/2 | - | - |
 | 13 | 0/4 | - | - |
@@ -61,6 +61,9 @@ Recent decisions for v1.1:
 - QueryInterface wraps StateManager - clean separation between internal state and public API
 - Subscription callbacks dispatched via asyncio.create_task - non-blocking
 - Delta queries scan event history for changed categories
+- Lazy import of TUI module for CLI performance
+- Dual quit bindings (Ctrl+C, Ctrl+Q) for robustness
+- TUI module structure: hfs/tui/ with relative imports
 
 ### Pending Todos
 
@@ -72,16 +75,14 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01
-Stopped at: Phase 9 complete, verified
+Last session: 2026-01-31
+Stopped at: Completed 10-01-PLAN.md
 Resume file: None
-Next: `/gsd:discuss-phase 10` or `/gsd:plan-phase 10`
+Next: Execute 10-02-PLAN.md
 
-**Phase 9 deliverables (ready for Phase 10):**
-- StateManager: Subscribes to EventBus("*"), processes all events
-- Snapshot models: AgentTree, NegotiationSnapshot, TokenUsageSummary, TraceTimeline
-- QueryInterface: Typed queries wrapping StateManager with 11 methods
-- Subscriptions: Category-filtered change notifications via subscribe()
-- Delta queries: get_changes_since(version) for efficient widget updates
-- All responses JSON-serializable via model_dump(mode='json')
-- Foundation layer complete — Textual widgets can now consume QueryInterface
+**Phase 10-01 deliverables (ready for 10-02):**
+- HFSApp class extending textual.app.App
+- hfs/tui/ package with __init__.py and app.py
+- CLI launches REPL when run with no arguments
+- Quit bindings (Ctrl+C, Ctrl+Q) working
+- Textual, Rich, prompt_toolkit dependencies installed
