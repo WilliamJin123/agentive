@@ -25,11 +25,12 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.widgets import Footer
 
-from .screens import ChatScreen
+from .screens import ChatScreen, InspectionScreen
 from .theme import HFS_THEME
 
 if TYPE_CHECKING:
     from hfs.agno.providers import ProviderManager
+    from hfs.state.query import QueryInterface
 
 logger = logging.getLogger(__name__)
 
@@ -61,12 +62,34 @@ class HFSApp(App):
 
     SCREENS = {
         "chat": ChatScreen,
+        "inspection": InspectionScreen,
     }
 
     def __init__(self) -> None:
         """Initialize HFSApp with lazy provider manager."""
         super().__init__()
         self._provider_manager: ProviderManager | None = None
+        self._query_interface: QueryInterface | None = None
+
+    @property
+    def query_interface(self) -> QueryInterface | None:
+        """Get QueryInterface for state queries, if available.
+
+        Returns:
+            QueryInterface instance or None if not set.
+        """
+        return self._query_interface
+
+    def set_query_interface(self, qi: QueryInterface) -> None:
+        """Set QueryInterface for inspection mode.
+
+        The QueryInterface provides access to state data for the inspection
+        screen. This is typically set when HFS runs with actual state management.
+
+        Args:
+            qi: The QueryInterface instance to use for state queries.
+        """
+        self._query_interface = qi
 
     def get_provider_manager(self) -> ProviderManager | None:
         """Get or lazily initialize the ProviderManager.

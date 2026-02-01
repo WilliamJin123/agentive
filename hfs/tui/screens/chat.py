@@ -46,6 +46,7 @@ class ChatScreen(Screen):
         "/help": "show_help",
         "/clear": "clear_conversation",
         "/exit": "quit_app",
+        "/inspect": "open_inspection",
     }
 
     DEFAULT_CSS = """
@@ -322,6 +323,7 @@ And a list:
 |---------|-------------|
 | `/help` | Show this help message |
 | `/clear` | Clear all messages |
+| `/inspect` | Open inspection mode |
 | `/exit` | Exit the application |
 
 **Input Tips**
@@ -329,6 +331,10 @@ And a list:
 - Press **Shift+Enter** to insert a new line
 """
         await message_list.add_message(help_text, is_system=True)
+
+    def open_inspection(self) -> None:
+        """Open inspection mode to view agent and negotiation state."""
+        self.app.push_screen("inspection")
 
     async def clear_conversation(self) -> None:
         """Clear all messages from the chat."""
