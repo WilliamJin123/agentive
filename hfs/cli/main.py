@@ -540,7 +540,7 @@ def main() -> int:
     # Handle no command - launch interactive REPL
     if args.command is None:
         # Lazy import to avoid overhead for other commands
-        from tui import HFSApp
+        from hfs.tui import HFSApp
 
         try:
             app = HFSApp()
