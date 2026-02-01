@@ -74,6 +74,8 @@ Recent decisions for v1.1:
 - Reactive attributes for status bar auto-updates
 - Reverse-i-search with bash-style prompt for history search
 - Key event interception via on_key for search mode
+- Lazy ProviderManager initialization to avoid slow TUI startup
+- Agent.arun(stream=True) for async streaming iteration
 
 ### Pending Todos
 
@@ -99,5 +101,6 @@ Next: Re-verify Phase 10, then execute 11-01-PLAN.md
 - Comprehensive Textual CSS theming (10-03)
 - Fixed TUI import path in main.py (10-04)
 - Lazy ProviderManager initialization (10-04)
+- Real LLM integration via Agno Agent with token-by-token streaming (10-04)
 - Command history with up/down arrows (10-05)
 - Ctrl+R fuzzy search through history (10-05)
