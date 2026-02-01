@@ -15,7 +15,11 @@ Usage:
     app.run()
 """
 
+from __future__ import annotations
+
+import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -23,6 +27,11 @@ from textual.widgets import Footer
 
 from .screens import ChatScreen
 from .theme import HFS_THEME
+
+if TYPE_CHECKING:
+    from hfs.agno.providers import ProviderManager
+
+logger = logging.getLogger(__name__)
 
 
 class HFSApp(App):
@@ -53,6 +62,32 @@ class HFSApp(App):
     SCREENS = {
         "chat": ChatScreen,
     }
+
+    def __init__(self) -> None:
+        """Initialize HFSApp with lazy provider manager."""
+        super().__init__()
+        self._provider_manager: ProviderManager | None = None
+
+    def get_provider_manager(self) -> ProviderManager | None:
+        """Get or lazily initialize the ProviderManager.
+
+        Returns the cached ProviderManager instance, creating it on first access.
+        Returns None if initialization fails (e.g., no API keys configured).
+
+        Returns:
+            ProviderManager instance or None if initialization failed.
+        """
+        if self._provider_manager is None:
+            try:
+                # Lazy import to avoid slow startup
+                from hfs.agno.providers import ProviderManager
+
+                self._provider_manager = ProviderManager()
+                logger.info("ProviderManager initialized successfully")
+            except Exception as e:
+                logger.error(f"Failed to initialize ProviderManager: {e}")
+                return None
+        return self._provider_manager
 
     def on_mount(self) -> None:
         """Called when app is mounted.
