@@ -90,12 +90,12 @@ Plans:
 4. Slash commands work: /help, /clear, /exit, and Ctrl+C quits gracefully
 5. Visual theme applies yellow/amber colors with triad-type color coding
 
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 10-01: Entry point and Textual app scaffold
-- [ ] 10-02: Chat widget with streaming and markdown
-- [ ] 10-03: Visual theme and status bar
+- [ ] 10-01-PLAN.md — Entry point and Textual app scaffold
+- [ ] 10-02-PLAN.md — Chat widget with streaming and markdown
+- [ ] 10-03-PLAN.md — Visual theme and status bar
 
 ---
 
