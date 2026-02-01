@@ -22,6 +22,7 @@ from textual.app import ComposeResult
 from textual.containers import Container, Vertical
 from textual.screen import Screen
 
+from hfs.user_config import ConfigLoader
 from ..widgets import ChatInput, ChatMessage, HFSStatusBar, MessageList, PulsingDot
 
 if TYPE_CHECKING:
@@ -47,16 +48,15 @@ class ChatScreen(Screen):
         "/clear": "clear_conversation",
         "/exit": "quit_app",
         "/inspect": "open_inspection",
+        "/config": "handle_config",
+        "/mode": "handle_mode",
     }
 
     DEFAULT_CSS = """
     ChatScreen {
-        layout: vertical;
-    }
-
-    ChatScreen > #chat-container {
-        height: 1fr;
-        width: 100%;
+        layout: grid;
+        grid-size: 1;
+        grid-rows: 1fr auto auto;
     }
 
     ChatScreen > #input-container {
@@ -67,7 +67,6 @@ class ChatScreen(Screen):
 
     ChatScreen > #input-container > #spinner {
         height: auto;
-        dock: top;
     }
 
     ChatScreen > #input-container > #input {
@@ -118,9 +117,9 @@ class ChatScreen(Screen):
                 handler = getattr(self, handler_name, None)
                 if handler:
                     if asyncio.iscoroutinefunction(handler):
-                        await handler()
+                        await handler(text)
                     else:
-                        handler()
+                        handler(text)
                     return
             # Unknown command
             message_list = self.query_one("#messages", MessageList)
@@ -314,7 +313,7 @@ And a list:
             response_tokens = max(1, len(mock_response) // 4)
             status_bar.add_tokens(response_tokens)
 
-    async def show_help(self) -> None:
+    async def show_help(self, _text: str = "") -> None:
         """Show help message with available commands."""
         message_list = self.query_one("#messages", MessageList)
         help_text = """**Available Commands**
@@ -324,6 +323,9 @@ And a list:
 | `/help` | Show this help message |
 | `/clear` | Clear all messages |
 | `/inspect` | Open inspection mode |
+| `/config` | View current configuration |
+| `/config set key value` | Change a setting |
+| `/mode compact` or `/mode verbose` | Switch output mode |
 | `/exit` | Exit the application |
 
 **Input Tips**
@@ -332,15 +334,136 @@ And a list:
 """
         await message_list.add_message(help_text, is_system=True)
 
-    def open_inspection(self) -> None:
+    def open_inspection(self, _text: str = "") -> None:
         """Open inspection mode to view agent and negotiation state."""
         self.app.push_screen("inspection")
 
-    async def clear_conversation(self) -> None:
+    async def clear_conversation(self, _text: str = "") -> None:
         """Clear all messages from the chat."""
         message_list = self.query_one("#messages", MessageList)
         await message_list.clear_messages()
 
-    def quit_app(self) -> None:
+    def quit_app(self, _text: str = "") -> None:
         """Exit the application."""
         self.app.exit(0)
+
+    async def handle_config(self, text: str) -> None:
+        """Handle /config command for viewing and editing settings.
+
+        Subcommands:
+            /config - Show current effective configuration
+            /config set key value - Update a setting
+
+        Args:
+            text: Full command text including /config.
+        """
+        message_list = self.query_one("#messages", MessageList)
+        loader = ConfigLoader()
+        parts = text.strip().split()
+
+        # /config (show all)
+        if len(parts) == 1:
+            effective = loader.get_effective_config()
+            table_rows = []
+            for key, info in effective.items():
+                source = info["source"]
+                # Shorten source path for display
+                if source.startswith(str(loader.global_path.parent)):
+                    source = f"~/.hfs/config.yaml"
+                elif source.startswith(str(loader.project_path.parent)):
+                    source = ".hfs/config.yaml"
+                elif source.startswith("env:"):
+                    pass  # Keep as-is
+                table_rows.append(f"| `{key}` | `{info['value']}` | {source} |")
+
+            config_text = f"""**HFS Configuration**
+
+| Setting | Value | Source |
+|---------|-------|--------|
+{chr(10).join(table_rows)}
+
+*Use `/config set key value` to change a setting.*
+"""
+            await message_list.add_message(config_text, is_system=True)
+            return
+
+        # /config set key value
+        if len(parts) >= 4 and parts[1].lower() == "set":
+            key = parts[2]
+            value = parts[3]
+
+            # Check if key is valid
+            from hfs.user_config import UserConfig
+            valid_keys = UserConfig.get_field_names()
+            if key not in valid_keys:
+                await message_list.add_message(
+                    f"**Error:** Unknown setting `{key}`.\n\n"
+                    f"Valid settings: {', '.join(f'`{k}`' for k in valid_keys)}",
+                    is_system=True,
+                )
+                return
+
+            # Check if value is valid
+            valid_values = UserConfig.get_valid_values(key)
+            if valid_values and value not in valid_values:
+                await message_list.add_message(
+                    f"**Error:** Invalid value `{value}` for `{key}`.\n\n"
+                    f"Must be one of: {', '.join(f'`{v}`' for v in valid_values)}",
+                    is_system=True,
+                )
+                return
+
+            # Save the setting
+            try:
+                loader.save(key, value)
+                await message_list.add_message(
+                    f"**Configuration updated**\n\n"
+                    f"`{key}` set to `{value}`\n\n"
+                    f"*Saved to {loader.global_path}*",
+                    is_system=True,
+                )
+            except Exception as e:
+                await message_list.add_message(
+                    f"**Error saving configuration:** {e}",
+                    is_system=True,
+                )
+            return
+
+        # Invalid subcommand
+        await message_list.add_message(
+            "**Usage:**\n"
+            "- `/config` - View all settings\n"
+            "- `/config set key value` - Change a setting\n\n"
+            "**Example:** `/config set output_mode compact`",
+            is_system=True,
+        )
+
+    async def handle_mode(self, text: str) -> None:
+        """Handle /mode shorthand for output mode switching.
+
+        This is a convenience alias for `/config set output_mode <mode>`.
+
+        Args:
+            text: Full command text including /mode.
+        """
+        message_list = self.query_one("#messages", MessageList)
+        parts = text.strip().split()
+
+        if len(parts) != 2:
+            await message_list.add_message(
+                "**Usage:** `/mode compact` or `/mode verbose`",
+                is_system=True,
+            )
+            return
+
+        mode = parts[1].lower()
+        if mode not in ("compact", "verbose"):
+            await message_list.add_message(
+                f"**Error:** Invalid mode `{mode}`.\n\n"
+                "Must be `compact` or `verbose`.",
+                is_system=True,
+            )
+            return
+
+        # Delegate to config set
+        await self.handle_config(f"/config set output_mode {mode}")
