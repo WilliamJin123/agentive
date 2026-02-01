@@ -5,5 +5,6 @@ full-window views that can be pushed/popped from the application stack.
 """
 
 from .chat import ChatScreen
+from .inspection import InspectionScreen
 
-__all__ = ["ChatScreen"]
+__all__ = ["ChatScreen", "InspectionScreen"]

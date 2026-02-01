@@ -258,3 +258,65 @@ FooterKey > .footer-key--description {
     text-align: center;
     background: $surface;
 }
+
+/* ==========================================================================
+   Inspection Mode
+   ========================================================================== */
+
+InspectionScreen {
+    layout: horizontal;
+}
+
+#inspection-sidebar {
+    width: 16;
+    background: $surface;
+    border-right: solid $hfs-border;
+    padding: 1;
+}
+
+#inspection-content {
+    width: 1fr;
+    height: 100%;
+}
+
+.nav-button {
+    width: 100%;
+    margin: 0 0 1 0;
+    background: $panel;
+}
+
+.nav-button:hover {
+    background: $surface;
+}
+
+.nav-button.-active {
+    background: $primary;
+    color: $background;
+    text-style: bold;
+}
+
+/* Tree styles */
+AgentTreeWidget {
+    height: 100%;
+    padding: 1;
+}
+
+/* Token breakdown styles */
+TokenBreakdown {
+    height: 100%;
+}
+
+/* Timeline styles */
+TraceTimelineWidget {
+    padding: 1;
+}
+
+.timeline-header {
+    text-style: bold;
+    color: $primary;
+    margin: 0 0 1 0;
+}
+
+.timeline-row {
+    height: 1;
+}
