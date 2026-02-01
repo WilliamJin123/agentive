@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-30)
 
 **Core value:** Rich terminal UI with full observability into multi-agent negotiation
-**Current focus:** Phase 11 - Agent Visibility & Inspection
+**Current focus:** Phase 12 - User Experience
 
 ## Current Position
 
-Phase: 11 of 13 (Agent Visibility & Inspection)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-01 - Completed 11-02-PLAN.md
+Phase: 12 of 13 (User Experience)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-01 - Completed 12-01-PLAN.md
 
-Progress: [█████████████░░░░░░░] 65% (11/17 plans)
+Progress: [██████████████░░░░░░] 71% (12/17 plans)
 
 ## Performance Metrics
 
@@ -25,9 +25,9 @@ Progress: [█████████████░░░░░░░] 65% (11
 - Duration: 2 days (2026-01-29 to 2026-01-30)
 
 **v1.1 Milestone:**
-- Total plans completed: 11
-- Average duration: 3.5 min
-- Total execution time: 39 min
+- Total plans completed: 12
+- Average duration: 3.6 min
+- Total execution time: 43 min
 
 **By Phase (v1.1):**
 
@@ -37,7 +37,7 @@ Progress: [█████████████░░░░░░░] 65% (11
 | 9 | 2/2 | 7 min | 3.5 min |
 | 10 | 5/5 | 13 min | 2.6 min |
 | 11 | 2/2 | 8 min | 4 min |
-| 12 | 0/2 | - | - |
+| 12 | 1/2 | 4 min | 4 min |
 | 13 | 0/4 | - | - |
 
 ## Accumulated Context
@@ -84,6 +84,9 @@ Recent decisions for v1.1:
 - Number keys 1-4 for quick view switching
 - Fullscreen toggle (F key) hides sidebar for maximum content space
 - Graceful state loading with try/except for missing QueryInterface
+- New hfs/user_config/ module for user preferences (separate from hfs/config/ YAML files)
+- ruamel.yaml for writing (preserves comments), PyYAML for reading
+- ConfigLoader instance per operation (simple, no stale config issues)
 
 ### Pending Todos
 
@@ -96,16 +99,13 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 11-02-PLAN.md
+Stopped at: Completed 12-01-PLAN.md
 Resume file: None
-Next: Phase 12 - WebSocket Bridge
+Next: 12-02-PLAN.md (keybinding modes)
 
-**Phase 11 complete - deliverables:**
-- AgentTreeWidget with triad colors and status icons (11-01)
-- TemperatureBar with color gradient display (11-01)
-- NegotiationPanel with document-style sections (11-01)
-- NegotiationSection with ownership badges and claims (11-01)
-- TokenBreakdown with phase/agent toggle (11-02)
-- TraceTimelineWidget with Gantt-style bars (11-02)
-- InspectionScreen with split-view navigation (11-02)
-- /inspect command integration (11-02)
+**Phase 12 in progress - deliverables:**
+- UserConfig Pydantic model with output_mode and keybinding_mode (12-01)
+- ConfigLoader with layered precedence (env > project > global) (12-01)
+- /config command for viewing and editing settings (12-01)
+- /mode shorthand for output mode switching (12-01)
+- App loads user config at startup (12-01)
