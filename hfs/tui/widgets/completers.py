@@ -197,6 +197,12 @@ class CommandCompleter(Widget):
     def _get_candidates(self, text: str) -> list[tuple[str, str]]:
         """Get completion candidates for the current text.
 
+        Completion behavior:
+        1. If text starts with '/' and has no space: complete slash commands
+        2. If text has space and argument looks like a path: complete file paths
+           - Argument is path-like if it starts with '.', '/', '~', or contains backslash
+           - Also triggers if command ends with space (shows cwd contents)
+
         Args:
             text: The current input text.
 
