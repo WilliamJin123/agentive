@@ -20,11 +20,16 @@ Example:
     >>> await manager.stop()
 """
 
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional, Callable, Awaitable
 
 from hfs.events.bus import EventBus
+
+if TYPE_CHECKING:
+    from hfs.state.query import ChangeCategory, StateChange
 from hfs.events.models import (
     AgentEndedEvent,
     AgentStartedEvent,
@@ -108,6 +113,9 @@ class StateManager:
         self._stream: Optional[EventStream] = None
         self._processing_task: Optional[asyncio.Task] = None
 
+        # Subscribers for state changes
+        self._subscribers: list[tuple[ChangeCategory, Callable[[StateChange], Awaitable[None]]]] = []
+
     @property
     def version(self) -> int:
         """Current state version for cache invalidation."""
@@ -138,11 +146,81 @@ class StateManager:
                 pass
             self._processing_task = None
 
+    def subscribe(
+        self,
+        callback: Callable[[StateChange], Awaitable[None]],
+        category: ChangeCategory = None,  # type: ignore[assignment]
+    ) -> Callable[[], None]:
+        """Subscribe to state changes.
+
+        Args:
+            callback: Async function called on state changes
+            category: Filter by change category (default: ALL)
+
+        Returns:
+            Unsubscribe function
+        """
+        # Import here to avoid circular import
+        from hfs.state.query import ChangeCategory as CC
+
+        if category is None:
+            category = CC.ALL
+
+        entry = (category, callback)
+        self._subscribers.append(entry)
+
+        def unsubscribe() -> None:
+            if entry in self._subscribers:
+                self._subscribers.remove(entry)
+
+        return unsubscribe
+
+    async def _notify_subscribers(self, category: ChangeCategory) -> None:
+        """Notify subscribers of state change.
+
+        Creates a StateChange notification and sends to all matching subscribers.
+        Uses asyncio.create_task to avoid blocking event processing.
+
+        Args:
+            category: The category of change that occurred
+        """
+        from hfs.state.query import ChangeCategory as CC, StateChange
+
+        change = StateChange(version=self._version, category=category)
+        for sub_category, callback in list(self._subscribers):
+            if sub_category == CC.ALL or sub_category == category:
+                try:
+                    asyncio.create_task(callback(change))
+                except Exception:
+                    pass  # Don't let one subscriber break others
+
+    def _get_category_for_event(self, event: HFSEvent) -> Optional[ChangeCategory]:
+        """Determine change category for an event.
+
+        Args:
+            event: The event to categorize
+
+        Returns:
+            The ChangeCategory for this event type, or None if unknown
+        """
+        from hfs.state.query import ChangeCategory as CC
+
+        if event.event_type.startswith("agent."):
+            return CC.AGENT_TREE
+        elif event.event_type.startswith("negotiation."):
+            return CC.NEGOTIATION
+        elif event.event_type == "usage.recorded":
+            return CC.USAGE
+        elif event.event_type.startswith(("phase.", "run.")):
+            return CC.TIMELINE
+        return None
+
     async def _process_events(self) -> None:
         """Process events from stream, updating state.
 
         Continuously reads events from the subscription stream and applies
-        them to internal state. Each event increments the version number.
+        them to internal state. Each event increments the version number
+        and notifies subscribers of the change category.
         """
         if self._stream is None:
             return
@@ -154,6 +232,10 @@ class StateManager:
             # Bound history size
             if len(self._event_history) > self._max_history:
                 self._event_history.pop(0)
+            # Notify subscribers
+            category = self._get_category_for_event(event)
+            if category is not None:
+                await self._notify_subscribers(category)
 
     def _apply_event(self, event: HFSEvent) -> None:
         """Update internal state based on event type.

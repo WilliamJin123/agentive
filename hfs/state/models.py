@@ -202,8 +202,16 @@ class TokenUsageSummary(BaseModel):
     @computed_field
     @property
     def total_tokens(self) -> int:
-        """Total tokens consumed across all phases."""
-        return sum(p.total_tokens for p in self.by_phase)
+        """Total tokens consumed.
+
+        Uses by_phase sum if available, otherwise falls back to by_agent sum.
+        This handles cases where usage is tracked at agent level but phase
+        aggregation hasn't occurred yet.
+        """
+        phase_total = sum(p.total_tokens for p in self.by_phase)
+        if phase_total > 0:
+            return phase_total
+        return sum(a.total_tokens for a in self.by_agent)
 
 
 # =============================================================================
