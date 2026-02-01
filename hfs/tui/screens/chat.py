@@ -416,6 +416,8 @@ And a list:
             # Save the setting
             try:
                 loader.save(key, value)
+                # Reload app config to pick up changes
+                self.app.reload_user_config()
                 await message_list.add_message(
                     f"**Configuration updated**\n\n"
                     f"`{key}` set to `{value}`\n\n"

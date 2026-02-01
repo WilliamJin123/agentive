@@ -25,6 +25,7 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.widgets import Footer
 
+from hfs.user_config import ConfigLoader, UserConfig
 from .screens import ChatScreen, InspectionScreen
 from .theme import HFS_THEME
 
@@ -66,10 +67,12 @@ class HFSApp(App):
     }
 
     def __init__(self) -> None:
-        """Initialize HFSApp with lazy provider manager."""
+        """Initialize HFSApp with lazy provider manager and user config."""
         super().__init__()
         self._provider_manager: ProviderManager | None = None
         self._query_interface: QueryInterface | None = None
+        self._user_config: UserConfig = ConfigLoader().load()
+        logger.info(f"User config loaded: output_mode={self._user_config.output_mode}")
 
     @property
     def query_interface(self) -> QueryInterface | None:
@@ -90,6 +93,22 @@ class HFSApp(App):
             qi: The QueryInterface instance to use for state queries.
         """
         self._query_interface = qi
+
+    def get_user_config(self) -> UserConfig:
+        """Get the current user configuration.
+
+        Returns:
+            UserConfig instance with current settings.
+        """
+        return self._user_config
+
+    def reload_user_config(self) -> None:
+        """Reload user configuration from disk.
+
+        Call this after /config set commands to pick up changes.
+        """
+        self._user_config = ConfigLoader().load()
+        logger.info(f"User config reloaded: output_mode={self._user_config.output_mode}")
 
     def get_provider_manager(self) -> ProviderManager | None:
         """Get or lazily initialize the ProviderManager.
