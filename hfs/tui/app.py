@@ -17,7 +17,9 @@ Usage:
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.widgets import Static, Footer
+from textual.widgets import Footer
+
+from .screens import ChatScreen
 
 
 class HFSApp(App):
@@ -31,6 +33,7 @@ class HFSApp(App):
         TITLE: Application title shown in terminal.
         SUB_TITLE: Subtitle shown below the title.
         BINDINGS: Keyboard shortcuts for the application.
+        SCREENS: Mapping of screen names to screen classes.
     """
 
     TITLE = "HFS"
@@ -41,37 +44,32 @@ class HFSApp(App):
         Binding("ctrl+q", "quit", "Quit", show=True),
     ]
 
-    CSS = """
-    Screen {
-        align: center middle;
+    SCREENS = {
+        "chat": ChatScreen,
     }
 
-    #welcome {
-        width: auto;
-        height: auto;
-        padding: 2 4;
-        border: solid green;
-        text-align: center;
+    CSS = """
+    Screen {
+        background: $background;
     }
     """
+
+    def on_mount(self) -> None:
+        """Called when app is mounted.
+
+        Pushes the chat screen as the main interface.
+        """
+        self.push_screen("chat")
 
     def compose(self) -> ComposeResult:
         """Create child widgets for the app.
 
-        This minimal scaffold yields a welcome message. Future plans will
-        add chat history, input area, and status panels.
+        The main content comes from ChatScreen. We yield Footer
+        for keybinding hints at the bottom.
 
         Yields:
-            Static: Welcome message widget.
             Footer: Keybinding hints footer.
         """
-        yield Static(
-            "Welcome to HFS\n\n"
-            "Hexagonal Frontend System\n"
-            "Interactive REPL\n\n"
-            "Press Ctrl+C or Ctrl+Q to exit",
-            id="welcome"
-        )
         yield Footer()
 
     def action_quit(self) -> None:
