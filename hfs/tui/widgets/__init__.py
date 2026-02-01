@@ -15,6 +15,7 @@ from .status_bar import HFSStatusBar
 from .temperature_bar import TemperatureBar
 from .token_breakdown import TokenBreakdown
 from .trace_timeline import TraceTimelineWidget
+from .vim_input import VimChatInput
 
 __all__ = [
     "AgentTreeWidget",
@@ -28,4 +29,5 @@ __all__ = [
     "TemperatureBar",
     "TokenBreakdown",
     "TraceTimelineWidget",
+    "VimChatInput",
 ]
