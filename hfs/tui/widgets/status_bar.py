@@ -35,7 +35,6 @@ class HFSStatusBar(Horizontal):
     DEFAULT_CSS = """
     HFSStatusBar {
         height: 1;
-        dock: bottom;
         background: $surface;
         padding: 0 1;
         border-top: solid #404040;
@@ -63,12 +62,24 @@ class HFSStatusBar(Horizontal):
     HFSStatusBar > .status-spacer {
         width: 1fr;
     }
+
+    HFSStatusBar > .status-vim-mode {
+        background: $warning;
+        color: $background;
+        padding: 0 1;
+        text-style: bold;
+    }
+
+    HFSStatusBar > .status-vim-mode.insert {
+        background: $success;
+    }
     """
 
     # Reactive attributes - display updates automatically when changed
     model_name: reactive[str] = reactive("claude-3-sonnet")
     token_count: reactive[int] = reactive(0)
     active_agents: reactive[list[str]] = reactive(list)
+    vim_mode: reactive[str] = reactive("")  # Empty = not in vim mode, "NORMAL" or "INSERT"
 
     def __init__(
         self,
@@ -89,11 +100,12 @@ class HFSStatusBar(Horizontal):
         self._initial_model = model_name
         self._initial_tokens = token_count
         self._initial_agents = active_agents or []
+        self._initial_vim_mode = ""
 
     def compose(self) -> ComposeResult:
         """Create child widgets for the status bar.
 
-        Layout: [model] [spacer] [tokens] [agents]
+        Layout: [model] [vim-mode?] [spacer] [tokens] [agents]
 
         Yields:
             Static widgets for each status section.
@@ -102,6 +114,12 @@ class HFSStatusBar(Horizontal):
             self._initial_model,
             id="status-model",
             classes="status-section status-model",
+        )
+        # Vim mode indicator - hidden by default (empty content)
+        yield Static(
+            "",
+            id="status-vim-mode",
+            classes="status-section status-vim-mode",
         )
         yield Static("", classes="status-spacer")
         yield Static(
@@ -154,6 +172,22 @@ class HFSStatusBar(Horizontal):
         try:
             widget = self.query_one("#status-agents", Static)
             widget.update(self._format_agents(value))
+        except Exception:
+            pass  # Widget not yet mounted
+
+    def watch_vim_mode(self, value: str) -> None:
+        """Update vim mode indicator when vim_mode changes.
+
+        Shows NORMAL (yellow) or INSERT (green). Empty value hides indicator.
+
+        Args:
+            value: The new vim mode ("NORMAL", "INSERT", or "").
+        """
+        try:
+            widget = self.query_one("#status-vim-mode", Static)
+            widget.update(value)
+            # Toggle insert class for color change
+            widget.set_class(value == "INSERT", "insert")
         except Exception:
             pass  # Widget not yet mounted
 
