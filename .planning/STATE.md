@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-30)
 ## Current Position
 
 Phase: 11 of 13 (Agent Visibility & Inspection)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-01-31 - Completed 11-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-01 - Completed 11-02-PLAN.md
 
-Progress: [████████████░░░░░░░░] 59% (10/17 plans)
+Progress: [█████████████░░░░░░░] 65% (11/17 plans)
 
 ## Performance Metrics
 
@@ -25,9 +25,9 @@ Progress: [████████████░░░░░░░░] 59% (10
 - Duration: 2 days (2026-01-29 to 2026-01-30)
 
 **v1.1 Milestone:**
-- Total plans completed: 10
+- Total plans completed: 11
 - Average duration: 3.5 min
-- Total execution time: 35 min
+- Total execution time: 39 min
 
 **By Phase (v1.1):**
 
@@ -36,7 +36,7 @@ Progress: [████████████░░░░░░░░] 59% (10
 | 8 | 2/2 | 6 min | 3 min |
 | 9 | 2/2 | 7 min | 3.5 min |
 | 10 | 5/5 | 13 min | 2.6 min |
-| 11 | 1/2 | 4 min | 4 min |
+| 11 | 2/2 | 8 min | 4 min |
 | 12 | 0/2 | - | - |
 | 13 | 0/4 | - | - |
 
@@ -80,6 +80,10 @@ Recent decisions for v1.1:
 - Three-tier temperature colors (red > 0.66, amber > 0.33, blue <= 0.33)
 - Auto-expand triads with WORKING agents
 - is_attached check before mount operations in set_snapshot()
+- ContentSwitcher for inspection view navigation
+- Number keys 1-4 for quick view switching
+- Fullscreen toggle (F key) hides sidebar for maximum content space
+- Graceful state loading with try/except for missing QueryInterface
 
 ### Pending Todos
 
@@ -91,13 +95,17 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-31
-Stopped at: Completed 11-01-PLAN.md
+Last session: 2026-02-01
+Stopped at: Completed 11-02-PLAN.md
 Resume file: None
-Next: 11-02-PLAN.md (Inspection Mode Screen)
+Next: Phase 12 - WebSocket Bridge
 
-**Phase 11 progress - deliverables:**
+**Phase 11 complete - deliverables:**
 - AgentTreeWidget with triad colors and status icons (11-01)
 - TemperatureBar with color gradient display (11-01)
 - NegotiationPanel with document-style sections (11-01)
 - NegotiationSection with ownership badges and claims (11-01)
+- TokenBreakdown with phase/agent toggle (11-02)
+- TraceTimelineWidget with Gantt-style bars (11-02)
+- InspectionScreen with split-view navigation (11-02)
+- /inspect command integration (11-02)
