@@ -15,7 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import selectinload
 
-from .models import MessageModel, SessionModel
+from .models import CheckpointModel, MessageModel, SessionModel
 
 # Placeholder name for new sessions (updated on first message)
 PLACEHOLDER_NAME = "New Session"
@@ -211,3 +211,132 @@ class SessionRepository:
 
                 await session.delete(db_session)
                 return True
+
+
+class CheckpointRepository:
+    """Repository for checkpoint CRUD operations.
+
+    Provides methods for creating, listing, and pruning checkpoints
+    within a session. Checkpoints capture state at key moments.
+
+    Args:
+        session_factory: Async session factory for creating database sessions.
+    """
+
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        """Initialize repository with session factory.
+
+        Args:
+            session_factory: Factory for creating async database sessions.
+        """
+        self._session_factory = session_factory
+
+    async def create(
+        self,
+        session_id: int,
+        message_index: int,
+        trigger_event: str,
+        state_json: str,
+    ) -> CheckpointModel:
+        """Create a new checkpoint.
+
+        Args:
+            session_id: ID of the session this checkpoint belongs to.
+            message_index: Position in conversation (for timeline display).
+            trigger_event: Event that triggered the checkpoint.
+            state_json: Serialized state snapshot.
+
+        Returns:
+            Created CheckpointModel instance with ID.
+        """
+        async with self._session_factory() as session:
+            async with session.begin():
+                checkpoint = CheckpointModel(
+                    session_id=session_id,
+                    message_index=message_index,
+                    trigger_event=trigger_event,
+                    state_json=state_json,
+                    created_at=datetime.now(timezone.utc),
+                )
+                session.add(checkpoint)
+                await session.flush()
+                # Return a detached copy
+                checkpoint_id = checkpoint.id
+                checkpoint_session_id = checkpoint.session_id
+                checkpoint_message_index = checkpoint.message_index
+                checkpoint_trigger_event = checkpoint.trigger_event
+                checkpoint_state_json = checkpoint.state_json
+                checkpoint_created_at = checkpoint.created_at
+
+        # Return new instance (detached from session)
+        result = CheckpointModel(
+            session_id=checkpoint_session_id,
+            message_index=checkpoint_message_index,
+            trigger_event=checkpoint_trigger_event,
+            state_json=checkpoint_state_json,
+            created_at=checkpoint_created_at,
+        )
+        result.id = checkpoint_id
+        return result
+
+    async def list_for_session(self, session_id: int) -> list[CheckpointModel]:
+        """List all checkpoints for a session ordered by message index.
+
+        Args:
+            session_id: ID of the session to get checkpoints for.
+
+        Returns:
+            List of CheckpointModel instances ordered by message_index ASC.
+        """
+        async with self._session_factory() as session:
+            result = await session.execute(
+                select(CheckpointModel)
+                .where(CheckpointModel.session_id == session_id)
+                .order_by(CheckpointModel.message_index.asc())
+            )
+            return list(result.scalars().all())
+
+    async def get(self, checkpoint_id: int) -> CheckpointModel | None:
+        """Get a checkpoint by ID.
+
+        Args:
+            checkpoint_id: ID of the checkpoint to retrieve.
+
+        Returns:
+            CheckpointModel instance, or None if not found.
+        """
+        async with self._session_factory() as session:
+            result = await session.execute(
+                select(CheckpointModel).where(CheckpointModel.id == checkpoint_id)
+            )
+            return result.scalar_one_or_none()
+
+    async def prune_oldest(self, session_id: int, keep_count: int) -> int:
+        """Delete oldest checkpoints beyond the keep_count limit.
+
+        Args:
+            session_id: ID of the session to prune checkpoints for.
+            keep_count: Number of most recent checkpoints to keep.
+
+        Returns:
+            Number of checkpoints deleted.
+        """
+        async with self._session_factory() as session:
+            async with session.begin():
+                # Get all checkpoints for session ordered by created_at DESC
+                result = await session.execute(
+                    select(CheckpointModel)
+                    .where(CheckpointModel.session_id == session_id)
+                    .order_by(CheckpointModel.created_at.desc())
+                )
+                checkpoints = list(result.scalars().all())
+
+                # Delete oldest beyond keep_count
+                if len(checkpoints) <= keep_count:
+                    return 0
+
+                to_delete = checkpoints[keep_count:]
+                for cp in to_delete:
+                    await session.delete(cp)
+
+                return len(to_delete)

@@ -55,6 +55,11 @@ class SessionModel(Base):
         lazy="selectin",  # Eager load to avoid async issues
         cascade="all, delete-orphan",
     )
+    checkpoints: Mapped[list["CheckpointModel"]] = relationship(
+        back_populates="session",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+    )
 
 
 class MessageModel(Base):
@@ -81,3 +86,32 @@ class MessageModel(Base):
     created_at: Mapped[datetime]
 
     session: Mapped["SessionModel"] = relationship(back_populates="messages")
+
+
+class CheckpointModel(Base):
+    """Checkpoint model.
+
+    Stores checkpoints for session state at key moments, enabling users
+    to rewind to previous states. Checkpoints are created automatically
+    on key events (run.ended, negotiation.resolved, phase.ended) or manually.
+
+    Attributes:
+        id: Primary key.
+        session_id: Foreign key to parent session.
+        message_index: Position in conversation (for timeline display).
+        trigger_event: Event that triggered checkpoint (run.ended, manual, etc).
+        state_json: Serialized RunSnapshot state.
+        created_at: When the checkpoint was created.
+        session: Relationship back to parent session.
+    """
+
+    __tablename__ = "checkpoints"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    session_id: Mapped[int] = mapped_column(ForeignKey("sessions.id"))
+    message_index: Mapped[int]
+    trigger_event: Mapped[str] = mapped_column(String(100))
+    state_json: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime]
+
+    session: Mapped["SessionModel"] = relationship(back_populates="checkpoints")
