@@ -97,6 +97,10 @@ Recent decisions for v1.1:
 - WAL mode for SQLite concurrency (13-01)
 - Auto-generated session names from first message content (13-01)
 - Lazy session creation on first message (13-01)
+- Branching rewind creates new session, preserves original history (13-02)
+- Message index tracking for visual checkpoint timeline display (13-02)
+- Retention limit pruning (default 10 checkpoints per session) (13-02)
+- Event-driven checkpointing via EventBus subscription (13-02)
 - EXPORT_SCHEMA_VERSION = 1.0.0 for versioned exports (13-03)
 - Sequential migration pattern for schema upgrades (13-03)
 - Exports saved to ~/.hfs/exports/ by default (13-03)
@@ -111,8 +115,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01
-Stopped at: Completed 13-03-PLAN.md
+Last session: 2026-02-02
+Stopped at: Completed 13-02-PLAN.md, 13-03-PLAN.md
 Resume file: None
 Next: 13-04 (Plugin Architecture)
 
@@ -121,6 +125,10 @@ Next: 13-04 (Plugin Architecture)
 - SessionRepository with CRUD operations (13-01)
 - /sessions, /resume, /rename commands (13-01)
 - Auto-save messages after each exchange (13-01)
+- CheckpointModel for state snapshots at key moments (13-02)
+- CheckpointService with event-driven auto-checkpointing (13-02)
+- /checkpoints, /checkpoint, /rewind commands with ASCII timeline (13-02)
+- checkpoint_retention config setting (default 10) (13-02)
 - Export module with markdown and JSON export (13-03)
 - Import with automatic schema migration (13-03)
 - /export md, /export json, /import commands (13-03)
