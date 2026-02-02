@@ -14,7 +14,10 @@ Usage:
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
 from textual import work
@@ -58,6 +61,11 @@ class ChatScreen(Screen):
         "/sessions": "handle_sessions",
         "/resume": "handle_resume",
         "/rename": "handle_rename",
+        "/checkpoints": "handle_checkpoints",
+        "/checkpoint": "handle_create_checkpoint",
+        "/rewind": "handle_rewind",
+        "/export": "handle_export",
+        "/import": "handle_import",
     }
 
     DEFAULT_CSS = """
@@ -437,6 +445,12 @@ And a list:
 | `/sessions` | List saved sessions |
 | `/resume <id>` | Resume a previous session |
 | `/rename <name>` | Rename current session |
+| `/export md [file]` | Export to markdown |
+| `/export json [file]` | Export to JSON |
+| `/import <file>` | Import from JSON file |
+| `/checkpoints` | List checkpoints for current session |
+| `/checkpoint` | Create a manual checkpoint |
+| `/rewind <#>` | Rewind to a checkpoint (branches history) |
 | `/config` | View current configuration |
 | `/config set key value` | Change a setting |
 | `/mode compact` or `/mode verbose` | Switch output mode |
@@ -804,3 +818,182 @@ Set `keybinding_mode: vim` in config for modal editing.
             f"**Session renamed to:** {new_name}",
             is_system=True,
         )
+
+    async def handle_export(self, text: str) -> None:
+        """Handle /export command.
+
+        Subcommands:
+            /export md [filename] - Export to markdown
+            /export json [filename] - Export to JSON
+            /export - Show usage
+
+        Args:
+            text: Full command text including /export.
+        """
+        message_list = self.query_one("#messages", MessageList)
+        parts = text.strip().split(maxsplit=2)
+
+        if len(parts) < 2:
+            await message_list.add_message(
+                "**Usage:**\n"
+                "- `/export md [filename]` - Export to markdown\n"
+                "- `/export json [filename]` - Export to JSON\n\n"
+                "Default location: `~/.hfs/exports/`",
+                is_system=True,
+            )
+            return
+
+        format_type = parts[1].lower()
+        if format_type not in ("md", "json"):
+            await message_list.add_message(
+                f"Unknown format: `{format_type}`. Use `md` or `json`.",
+                is_system=True,
+            )
+            return
+
+        # Get session info
+        session_repo = self.app.get_session_repo()
+        session_id = self.app.get_current_session_id()
+        if not session_repo or not session_id:
+            await message_list.add_message(
+                "No active session to export.",
+                is_system=True,
+            )
+            return
+
+        session = await session_repo.get(session_id)
+        if not session:
+            await message_list.add_message("Session not found.", is_system=True)
+            return
+
+        # Prepare messages for export
+        messages = [
+            {"role": m.role, "content": m.content, "created_at": m.created_at.isoformat()}
+            for m in session.messages
+        ]
+
+        # Generate filename
+        exports_dir = Path.home() / ".hfs" / "exports"
+        exports_dir.mkdir(parents=True, exist_ok=True)
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_name = "".join(c if c.isalnum() or c in "- " else "_" for c in session.name[:30])
+
+        if len(parts) >= 3:
+            filename = parts[2]
+        else:
+            ext = "md" if format_type == "md" else "json"
+            filename = f"{safe_name}_{timestamp}.{ext}"
+
+        filepath = exports_dir / filename
+
+        # Export
+        from hfs.export import export_to_json, export_to_markdown
+
+        if format_type == "md":
+            content = export_to_markdown(session.name, messages)
+        else:
+            content = export_to_json(session.name, messages)
+
+        filepath.write_text(content, encoding="utf-8")
+
+        await message_list.add_message(
+            f"**Exported successfully**\n\n"
+            f"Format: `{format_type}`\n"
+            f"File: `{filepath}`\n"
+            f"Messages: {len(messages)}",
+            is_system=True,
+        )
+
+    async def handle_import(self, text: str) -> None:
+        """Handle /import command.
+
+        Usage: /import <filepath>
+
+        Args:
+            text: Full command text including /import.
+        """
+        message_list = self.query_one("#messages", MessageList)
+        parts = text.strip().split(maxsplit=1)
+
+        if len(parts) < 2:
+            await message_list.add_message(
+                "**Usage:** `/import <filepath>`\n\n"
+                "Import a previously exported JSON file.",
+                is_system=True,
+            )
+            return
+
+        filepath = Path(parts[1]).expanduser()
+        if not filepath.exists():
+            await message_list.add_message(
+                f"File not found: `{filepath}`",
+                is_system=True,
+            )
+            return
+
+        try:
+            json_content = filepath.read_text(encoding="utf-8")
+            from hfs.export import import_from_json
+
+            result = import_from_json(json_content)
+
+            # Create new session with imported messages
+            session_repo = self.app.get_session_repo()
+            if not session_repo:
+                await message_list.add_message(
+                    "Persistence not available.",
+                    is_system=True,
+                )
+                return
+
+            # Create session
+            new_session = await session_repo.create(name=f"{result.session_name} (imported)")
+
+            # Add messages
+            for msg in result.messages:
+                await session_repo.add_message(
+                    new_session.id,
+                    msg["role"],
+                    msg["content"],
+                )
+
+            # Set as current session and load messages
+            self.app.set_current_session_id(new_session.id)
+            await message_list.clear_messages()
+
+            for msg in result.messages:
+                is_user = msg["role"] == "user"
+                is_system_msg = msg["role"] == "system"
+                await message_list.add_message(
+                    msg["content"],
+                    is_user=is_user,
+                    is_system=is_system_msg,
+                )
+
+            migration_note = ""
+            if result.migrated:
+                migration_note = f"\n*Migrated from schema v{result.original_version}*"
+
+            await message_list.add_message(
+                f"**Imported successfully**\n\n"
+                f"Session: `{new_session.name}`\n"
+                f"Messages: {len(result.messages)}{migration_note}",
+                is_system=True,
+            )
+
+        except json.JSONDecodeError as e:
+            await message_list.add_message(
+                f"**Invalid JSON:** {e}",
+                is_system=True,
+            )
+        except ValueError as e:
+            await message_list.add_message(
+                f"**Import failed:** {e}",
+                is_system=True,
+            )
+        except Exception as e:
+            await message_list.add_message(
+                f"**Error:** {type(e).__name__}: {e}",
+                is_system=True,
+            )
