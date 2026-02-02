@@ -157,13 +157,13 @@ Plans:
 4. Plugin discovery loads plugins from ~/.hfs/plugins/
 5. Plugins can register slash commands, add widgets, and hook into lifecycle events
 
-**Plans**: TBD
+**Plans**: 4 plans in 3 waves
 
 Plans:
-- [ ] 13-01: Session management with SQLAlchemy
-- [ ] 13-02: Checkpoint system
-- [ ] 13-03: Export/import functionality
-- [ ] 13-04: Plugin system architecture
+- [ ] 13-01-PLAN.md — Session persistence with SQLAlchemy (Wave 1)
+- [ ] 13-02-PLAN.md — Checkpoint system with event-driven auto-checkpointing (Wave 2)
+- [ ] 13-03-PLAN.md — Export/import functionality with versioned schema (Wave 2)
+- [ ] 13-04-PLAN.md — Plugin system architecture (Wave 3)
 
 ---
 
@@ -178,10 +178,10 @@ Plans:
 | 10. Textual Core | v1.1 | 5/5 | ✓ Complete | 2026-02-01 |
 | 11. Agent Visibility & Inspection | v1.1 | 2/2 | ✓ Complete | 2026-02-01 |
 | 12. User Experience | v1.1 | 3/3 | ✓ Complete | 2026-02-01 |
-| 13. Persistence & Plugins | v1.1 | 0/4 | Not started | - |
+| 13. Persistence & Plugins | v1.1 | 0/4 | Planned | - |
 
 **Total:** 14/18 plans complete (78%)
 
 ---
 *Roadmap created: 2026-01-30*
-*Last updated: 2026-02-01 (Phase 12 complete)*
+*Last updated: 2026-02-01 (Phase 13 planned)*
