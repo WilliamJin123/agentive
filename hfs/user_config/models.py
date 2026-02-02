@@ -32,6 +32,7 @@ class UserConfig(BaseModel):
     output_mode: Literal["compact", "verbose"] = "verbose"
     keybinding_mode: Literal["standard", "vim", "emacs"] = "standard"
     checkpoint_retention: int = 10
+    disabled_plugins: list[str] = []
 
     @classmethod
     def get_valid_values(cls, field_name: str) -> list[str] | None:
@@ -60,4 +61,4 @@ class UserConfig(BaseModel):
         Returns:
             List of field names that can be configured.
         """
-        return ["output_mode", "keybinding_mode", "checkpoint_retention"]
+        return ["output_mode", "keybinding_mode", "checkpoint_retention", "disabled_plugins"]

@@ -66,6 +66,7 @@ class ChatScreen(Screen):
         "/rewind": "handle_rewind",
         "/export": "handle_export",
         "/import": "handle_import",
+        "/plugins": "handle_plugins",
     }
 
     DEFAULT_CSS = """
@@ -123,7 +124,8 @@ class ChatScreen(Screen):
     async def on_mount(self) -> None:
         """Called when screen is mounted.
 
-        Sets initial focus to the input field and initializes vim mode indicator.
+        Sets initial focus to the input field, initializes vim mode indicator,
+        and shows pending plugin approvals.
         """
         input_widget = self.query_one("#input")
         input_widget.focus()
@@ -132,6 +134,9 @@ class ChatScreen(Screen):
         if hasattr(input_widget, "mode"):
             status_bar = self.query_one("#status-bar", HFSStatusBar)
             status_bar.vim_mode = input_widget.mode.name
+
+        # Show pending plugin approvals
+        await self._show_pending_plugins()
 
     def on_vim_chat_input_mode_changed(self, event: VimChatInput.ModeChanged) -> None:
         """Handle vim mode changes to update status bar.
@@ -219,6 +224,13 @@ class ChatScreen(Screen):
         # Check for slash commands
         if text.startswith("/"):
             cmd = text.split()[0].lower()
+
+            # Check for plugin commands first
+            plugin_manager = self.app.get_plugin_manager()
+            if plugin_manager and plugin_manager.has_command(cmd):
+                await plugin_manager.call_command(cmd, text)
+                return
+
             if cmd in self.SLASH_COMMANDS:
                 handler_name = self.SLASH_COMMANDS[cmd]
                 handler = getattr(self, handler_name, None)
@@ -251,6 +263,18 @@ class ChatScreen(Screen):
 
         # Ensure we have a session for persistence
         await self._ensure_session()
+
+        # Call plugin on_message hook for user message
+        plugin_manager = self.app.get_plugin_manager()
+        if plugin_manager:
+            results = await plugin_manager.call_hook(
+                "on_message", message=text, is_user=True
+            )
+            # If any plugin returns a modified message, use it
+            for result in results:
+                if isinstance(result, str):
+                    text = result
+                    break
 
         # Add user message
         await message_list.add_message(text, is_user=True)
@@ -451,6 +475,9 @@ And a list:
 | `/checkpoints` | List checkpoints for current session |
 | `/checkpoint` | Create a manual checkpoint |
 | `/rewind <#>` | Rewind to a checkpoint (branches history) |
+| `/plugins` | List loaded and pending plugins |
+| `/plugins approve <name>` | Approve a pending plugin |
+| `/plugins deny <name>` | Deny a pending plugin |
 | `/config` | View current configuration |
 | `/config set key value` | Change a setting |
 | `/mode compact` or `/mode verbose` | Switch output mode |
@@ -1219,3 +1246,115 @@ Timeline:
                 f"**Error:** {type(e).__name__}: {e}",
                 is_system=True,
             )
+
+    async def _show_pending_plugins(self) -> None:
+        """Show pending plugin approvals on startup."""
+        pending = self.app.get_pending_plugin_approvals()
+        if not pending:
+            return
+
+        message_list = self.query_one("#messages", MessageList)
+        lines = ["**New plugins detected:**\n"]
+        lines.append("| Plugin | Version | Capabilities |")
+        lines.append("|--------|---------|--------------|")
+
+        for plugin in pending:
+            caps = ", ".join(plugin.manifest.capabilities)
+            lines.append(f"| {plugin.manifest.name} | {plugin.manifest.version} | {caps} |")
+
+        lines.append("\nType `/plugins approve <name>` or `/plugins deny <name>`")
+
+        await message_list.add_message("\n".join(lines), is_system=True)
+
+    async def handle_plugins(self, text: str) -> None:
+        """Handle /plugins command.
+
+        Subcommands:
+            /plugins - List loaded and pending plugins
+            /plugins approve <name> - Approve pending plugin
+            /plugins deny <name> - Deny pending plugin
+
+        Args:
+            text: Full command text including /plugins.
+        """
+        message_list = self.query_one("#messages", MessageList)
+        plugin_manager = self.app.get_plugin_manager()
+
+        if not plugin_manager:
+            await message_list.add_message(
+                "Plugin system not available.",
+                is_system=True,
+            )
+            return
+
+        parts = text.strip().split()
+
+        # /plugins (list)
+        if len(parts) == 1:
+            loaded = plugin_manager.get_loaded_plugins()
+            pending = plugin_manager.get_pending_approvals()
+
+            lines = ["**Plugins**\n"]
+
+            if loaded:
+                lines.append("**Loaded:**")
+                lines.append("| Name | Version | Capabilities |")
+                lines.append("|------|---------|--------------|")
+                for p in loaded:
+                    caps = ", ".join(p.manifest.capabilities)
+                    lines.append(f"| {p.manifest.name} | {p.manifest.version} | {caps} |")
+                lines.append("")
+
+            if pending:
+                lines.append("**Pending Approval:**")
+                lines.append("| Name | Version | Capabilities |")
+                lines.append("|------|---------|--------------|")
+                for p in pending:
+                    caps = ", ".join(p.manifest.capabilities)
+                    lines.append(f"| {p.manifest.name} | {p.manifest.version} | {caps} |")
+                lines.append("\nUse `/plugins approve <name>` or `/plugins deny <name>`")
+
+            if not loaded and not pending:
+                lines.append("No plugins found.\n\nPlugins go in `~/.hfs/plugins/<plugin_name>/`")
+
+            await message_list.add_message("\n".join(lines), is_system=True)
+            return
+
+        # /plugins approve <name>
+        if len(parts) >= 3 and parts[1] == "approve":
+            name = parts[2]
+            if plugin_manager.approve_plugin(name):
+                await message_list.add_message(
+                    f"**Plugin approved:** `{name}`\n\nPlugin is now active.",
+                    is_system=True,
+                )
+            else:
+                await message_list.add_message(
+                    f"Plugin `{name}` not found in pending list.",
+                    is_system=True,
+                )
+            return
+
+        # /plugins deny <name>
+        if len(parts) >= 3 and parts[1] == "deny":
+            name = parts[2]
+            if plugin_manager.deny_plugin(name):
+                await message_list.add_message(
+                    f"**Plugin denied:** `{name}`",
+                    is_system=True,
+                )
+            else:
+                await message_list.add_message(
+                    f"Plugin `{name}` not found in pending list.",
+                    is_system=True,
+                )
+            return
+
+        # Unknown subcommand
+        await message_list.add_message(
+            "**Usage:**\n"
+            "- `/plugins` - List all plugins\n"
+            "- `/plugins approve <name>` - Approve pending plugin\n"
+            "- `/plugins deny <name>` - Deny pending plugin",
+            is_system=True,
+        )

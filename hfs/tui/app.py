@@ -32,6 +32,7 @@ from .theme import HFS_THEME
 if TYPE_CHECKING:
     from hfs.agno.providers import ProviderManager
     from hfs.persistence import CheckpointRepository, CheckpointService, SessionRepository
+    from hfs.plugins import PluginManager
     from hfs.state.query import QueryInterface
     from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
@@ -81,6 +82,9 @@ class HFSApp(App):
         self._checkpoint_repo: CheckpointRepository | None = None
         self._checkpoint_service: CheckpointService | None = None
         self._current_session_id: int | None = None
+        # Plugin system
+        self._plugin_manager: PluginManager | None = None
+        self._pending_plugin_approvals: list = []
         logger.info(f"User config loaded: output_mode={self._user_config.output_mode}")
 
     @property
@@ -217,15 +221,66 @@ class HFSApp(App):
         self._current_session_id = session_id
         logger.info(f"Current session set to: {session_id}")
 
+    async def initialize_plugins(self) -> None:
+        """Initialize plugin system.
+
+        Discovers and loads plugins from ~/.hfs/plugins/. Plugins that
+        are already approved are activated immediately. New plugins are
+        added to the pending approval list for user review.
+        """
+        try:
+            from hfs.plugins import PluginManager
+
+            config = self.get_user_config()
+            disabled = (
+                config.disabled_plugins
+                if hasattr(config, "disabled_plugins")
+                else []
+            )
+
+            self._plugin_manager = PluginManager(disabled_plugins=disabled)
+            loaded = self._plugin_manager.load_plugins()
+
+            if loaded > 0:
+                logger.info(f"Loaded {loaded} plugin(s)")
+
+            # Check for pending approvals
+            pending = self._plugin_manager.get_pending_approvals()
+            if pending:
+                # Store for ChatScreen to display
+                self._pending_plugin_approvals = pending
+
+        except Exception as e:
+            logger.error(f"Failed to initialize plugins: {e}")
+            # Plugin system is optional - app can run without it
+
+    def get_plugin_manager(self) -> PluginManager | None:
+        """Get the plugin manager instance.
+
+        Returns:
+            PluginManager instance or None if not initialized.
+        """
+        return self._plugin_manager
+
+    def get_pending_plugin_approvals(self) -> list:
+        """Get list of plugins pending user approval.
+
+        Returns:
+            List of DiscoveredPlugin objects awaiting approval.
+        """
+        return self._pending_plugin_approvals
+
     async def on_mount(self) -> None:
         """Called when app is mounted.
 
-        Registers the HFS theme, initializes persistence, and pushes the chat screen.
+        Registers the HFS theme, initializes persistence and plugins, and pushes the chat screen.
         """
         self.register_theme(HFS_THEME)
         self.theme = "hfs"
         # Initialize persistence (async)
         await self.initialize_persistence()
+        # Initialize plugins
+        await self.initialize_plugins()
         self.push_screen("chat")
 
     def compose(self) -> ComposeResult:
