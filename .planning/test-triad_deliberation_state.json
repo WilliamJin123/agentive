@@ -1,0 +1,10 @@
+{
+  "triad_id": "test-triad",
+  "phase": "deliberation",
+  "session_state": {
+    "current_phase": "deliberation",
+    "deliberation_summary": null,
+    "negotiation_summary": null,
+    "execution_summary": null
+  }
+}

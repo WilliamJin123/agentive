@@ -218,10 +218,12 @@ class ChatInput(TextArea):
         """
         # Handle Enter key for submit (outside search mode)
         # Must intercept here to prevent TextArea's default newline insertion
+        # In Textual, shift+enter comes through as "shift+enter", plain enter as "enter"
         if not self._search_mode:
-            if event.key == "enter" and not event.shift:
+            if event.key == "enter":
                 event.prevent_default()
                 self.action_submit()
+            # Allow shift+enter to pass through for newline (TextArea default)
             return
 
         if event.key == "escape":

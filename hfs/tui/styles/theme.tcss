@@ -30,7 +30,6 @@ ChatScreen {
    ========================================================================== */
 
 MessageList {
-    height: 100%;
     scrollbar-gutter: stable;
     scrollbar-size: 1 1;
     padding: 0 1;
@@ -122,7 +121,6 @@ ChatInput:focus {
 
 HFSStatusBar {
     height: 1;
-    dock: bottom;
     background: $surface;
     padding: 0 1;
     border-top: solid #404040;

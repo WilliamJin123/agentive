@@ -14,10 +14,12 @@ from hfs.agno.tools import HFSToolkit
 
 @pytest.fixture
 def mock_model():
-    """Create a mock Agno Model that doesn't make API calls."""
-    model = Mock()
-    model.id = "mock-model"
-    return model
+    """Create a mock ModelSelector that returns mock model instances."""
+    mock_agno_model = Mock()
+    mock_agno_model.id = "mock-model"
+    model_selector = Mock()
+    model_selector.get_model.return_value = mock_agno_model
+    return model_selector
 
 
 @pytest.fixture
@@ -180,7 +182,7 @@ class TestTeamConfiguration:
             call_kwargs = MockTeam.call_args.kwargs
 
             assert call_kwargs["name"] == "triad_test_hierarchical"
-            assert call_kwargs["model"] == mock_model
+            assert call_kwargs["model"] == mock_model.get_model.return_value
             assert call_kwargs["delegate_to_all_members"] is False
             assert call_kwargs["share_member_interactions"] is True
             assert call_kwargs["add_session_state_to_context"] is True

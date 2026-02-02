@@ -222,8 +222,10 @@ class PressureSystem:
             True if temperature is below freeze threshold or max rounds reached
         """
         temp = self.calculate_temperature(round_num)
+        # Use small epsilon for floating point comparison
+        epsilon = 1e-9
         return (
-            temp <= self.config.freeze_threshold or
+            temp <= self.config.freeze_threshold + epsilon or
             round_num >= self.config.max_negotiation_rounds
         )
 

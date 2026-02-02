@@ -51,8 +51,10 @@ class MockAgnoModel(Model):
 
 @pytest.fixture
 def mock_model():
-    """Create a mock Agno Model that passes type validation."""
-    return MockAgnoModel(id="mock-model")
+    """Create a mock ModelSelector that returns MockAgnoModel instances."""
+    model_selector = Mock()
+    model_selector.get_model.return_value = MockAgnoModel(id="mock-model")
+    return model_selector
 
 
 @pytest.fixture
