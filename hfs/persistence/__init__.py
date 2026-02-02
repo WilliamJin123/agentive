@@ -14,6 +14,7 @@ Exports:
 
 from .engine import create_db_engine, get_session_factory
 from .models import Base, MessageModel, SessionModel
+from .repository import SessionRepository
 
 __all__ = [
     "Base",
@@ -21,4 +22,5 @@ __all__ = [
     "MessageModel",
     "create_db_engine",
     "get_session_factory",
+    "SessionRepository",
 ]
