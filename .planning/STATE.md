@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-30)
 
 **Core value:** Rich terminal UI with full observability into multi-agent negotiation
-**Current focus:** Phase 12 - User Experience
+**Current focus:** Phase 13 - Persistence & Plugins
 
 ## Current Position
 
-Phase: 12 of 13 (User Experience)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-01 - Completed 12-03-PLAN.md
+Phase: 13 of 13 (Persistence & Plugins)
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-02-02 - Completed 13-01-PLAN.md
 
-Progress: [████████████████████] 100% (15/15 plans through phase 12)
+Progress: [████████████████░░░░] 80% (16/20 plans through phase 13)
 
 ## Performance Metrics
 
@@ -25,9 +25,9 @@ Progress: [████████████████████] 100% (1
 - Duration: 2 days (2026-01-29 to 2026-01-30)
 
 **v1.1 Milestone:**
-- Total plans completed: 12
+- Total plans completed: 13
 - Average duration: 3.6 min
-- Total execution time: 43 min
+- Total execution time: 47 min
 
 **By Phase (v1.1):**
 
@@ -38,7 +38,7 @@ Progress: [████████████████████] 100% (1
 | 10 | 5/5 | 13 min | 2.6 min |
 | 11 | 2/2 | 8 min | 4 min |
 | 12 | 3/3 | 12 min | 4 min |
-| 13 | 0/4 | - | - |
+| 13 | 1/4 | 4 min | 4 min |
 
 ## Accumulated Context
 
@@ -93,6 +93,10 @@ Recent decisions for v1.1:
 - VimChatInput with NORMAL/INSERT modes for modal editing (12-03)
 - ModeChanged message for status bar vim mode indicator (12-03)
 - Conditional widget selection based on keybinding_mode config (12-03)
+- SQLAlchemy 2.x with AsyncSession + SQLite for persistence (13-01)
+- WAL mode for SQLite concurrency (13-01)
+- Auto-generated session names from first message content (13-01)
+- Lazy session creation on first message (13-01)
 
 ### Pending Todos
 
@@ -104,17 +108,13 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01
-Stopped at: Completed 12-03-PLAN.md
+Last session: 2026-02-02
+Stopped at: Completed 13-01-PLAN.md
 Resume file: None
-Next: Phase 13 (polish and packaging)
+Next: 13-02 (Checkpointing)
 
-**Phase 12 complete - deliverables:**
-- UserConfig Pydantic model with output_mode and keybinding_mode (12-01)
-- ConfigLoader with layered precedence (env > project > global) (12-01)
-- /config command for viewing and editing settings (12-01)
-- /mode shorthand for output mode switching (12-01)
-- App loads user config at startup (12-01)
-- Tab completion for slash commands (12-02)
-- VimChatInput with modal editing (12-03)
-- Status bar vim mode indicator (12-03)
+**Phase 13 progress - deliverables:**
+- SQLAlchemy persistence module with SessionModel, MessageModel (13-01)
+- SessionRepository with CRUD operations (13-01)
+- /sessions, /resume, /rename commands (13-01)
+- Auto-save messages after each exchange (13-01)
