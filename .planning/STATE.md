@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-30)
 ## Current Position
 
 Phase: 13 of 13 (Persistence & Plugins)
-Plan: 1 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-02-02 - Completed 13-01-PLAN.md
+Last activity: 2026-02-01 - Completed 13-03-PLAN.md
 
-Progress: [████████████████░░░░] 80% (16/20 plans through phase 13)
+Progress: [██████████████████░░] 90% (18/20 plans through phase 13)
 
 ## Performance Metrics
 
@@ -25,9 +25,9 @@ Progress: [████████████████░░░░] 80% (16
 - Duration: 2 days (2026-01-29 to 2026-01-30)
 
 **v1.1 Milestone:**
-- Total plans completed: 13
-- Average duration: 3.6 min
-- Total execution time: 47 min
+- Total plans completed: 15
+- Average duration: 3.5 min
+- Total execution time: 55 min
 
 **By Phase (v1.1):**
 
@@ -38,7 +38,7 @@ Progress: [████████████████░░░░] 80% (16
 | 10 | 5/5 | 13 min | 2.6 min |
 | 11 | 2/2 | 8 min | 4 min |
 | 12 | 3/3 | 12 min | 4 min |
-| 13 | 1/4 | 4 min | 4 min |
+| 13 | 3/4 | 12 min | 4 min |
 
 ## Accumulated Context
 
@@ -97,6 +97,9 @@ Recent decisions for v1.1:
 - WAL mode for SQLite concurrency (13-01)
 - Auto-generated session names from first message content (13-01)
 - Lazy session creation on first message (13-01)
+- EXPORT_SCHEMA_VERSION = 1.0.0 for versioned exports (13-03)
+- Sequential migration pattern for schema upgrades (13-03)
+- Exports saved to ~/.hfs/exports/ by default (13-03)
 
 ### Pending Todos
 
@@ -108,13 +111,16 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-02
-Stopped at: Completed 13-01-PLAN.md
+Last session: 2026-02-01
+Stopped at: Completed 13-03-PLAN.md
 Resume file: None
-Next: 13-02 (Checkpointing)
+Next: 13-04 (Plugin Architecture)
 
 **Phase 13 progress - deliverables:**
 - SQLAlchemy persistence module with SessionModel, MessageModel (13-01)
 - SessionRepository with CRUD operations (13-01)
 - /sessions, /resume, /rename commands (13-01)
 - Auto-save messages after each exchange (13-01)
+- Export module with markdown and JSON export (13-03)
+- Import with automatic schema migration (13-03)
+- /export md, /export json, /import commands (13-03)

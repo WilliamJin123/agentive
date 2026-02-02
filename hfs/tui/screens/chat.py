@@ -618,6 +618,7 @@ Set `keybinding_mode: vim` in config for modal editing.
         """Ensure a session exists for persistence.
 
         Creates a new session if none exists. Called before sending messages.
+        Also initializes the checkpoint service for the session.
         """
         repo = self.app.get_session_repo()
         if repo is None:
@@ -629,8 +630,15 @@ Set `keybinding_mode: vim` in config for modal editing.
             self.app.set_current_session_id(session.id)
             logger.info(f"Created new session: {session.id}")
 
+            # Initialize checkpoint service for new session
+            checkpoint_service = self.app.get_checkpoint_service()
+            if checkpoint_service:
+                checkpoint_service.set_session(session.id, 0)
+
     async def _persist_message(self, role: str, content: str) -> None:
         """Persist a message to the current session.
+
+        Also increments the checkpoint service message index.
 
         Args:
             role: Message role (user, assistant, system).
@@ -645,6 +653,11 @@ Set `keybinding_mode: vim` in config for modal editing.
         try:
             await repo.add_message(session_id, role, content)
             logger.debug(f"Persisted {role} message to session {session_id}")
+
+            # Increment checkpoint service message index
+            checkpoint_service = self.app.get_checkpoint_service()
+            if checkpoint_service:
+                checkpoint_service.increment_message_index()
         except Exception as e:
             logger.error(f"Failed to persist message: {e}")
 
@@ -748,6 +761,11 @@ Set `keybinding_mode: vim` in config for modal editing.
         # Set current session
         self.app.set_current_session_id(session_id)
 
+        # Update checkpoint service session
+        checkpoint_service = self.app.get_checkpoint_service()
+        if checkpoint_service:
+            checkpoint_service.set_session(session_id, len(session.messages))
+
         await message_list.add_message(
             f"**Resumed session:** {session.name}\n\n"
             f"*{len(session.messages)} messages loaded.*",
@@ -816,6 +834,210 @@ Set `keybinding_mode: vim` in config for modal editing.
 
         await message_list.add_message(
             f"**Session renamed to:** {new_name}",
+            is_system=True,
+        )
+
+    async def handle_checkpoints(self, _text: str = "") -> None:
+        """Handle /checkpoints command to list checkpoints for current session.
+
+        Displays a visual ASCII timeline and table of checkpoints.
+        """
+        message_list = self.query_one("#messages", MessageList)
+        checkpoint_repo = self.app.get_checkpoint_repo()
+        session_id = self.app.get_current_session_id()
+
+        if checkpoint_repo is None:
+            await message_list.add_message(
+                "**Error:** Persistence not available.",
+                is_system=True,
+            )
+            return
+
+        if session_id is None:
+            await message_list.add_message(
+                "**No current session.** Send a message first.",
+                is_system=True,
+            )
+            return
+
+        checkpoints = await checkpoint_repo.list_for_session(session_id)
+
+        if not checkpoints:
+            await message_list.add_message(
+                "**No checkpoints for this session.**\n\n"
+                "Checkpoints are created automatically on key events "
+                "(run.ended, phase.ended, negotiation.resolved) or manually with `/checkpoint`.",
+                is_system=True,
+            )
+            return
+
+        # Build visual ASCII timeline
+        timeline_positions = [f"[{cp.message_index}]" for cp in checkpoints]
+        timeline_line = " --> ".join(timeline_positions)
+
+        # Build table rows
+        table_rows = []
+        for i, cp in enumerate(checkpoints, 1):
+            time_str = cp.created_at.strftime("%H:%M")
+            table_rows.append(f"| {i} | {cp.message_index} | {cp.trigger_event} | {time_str} |")
+
+        checkpoints_text = f"""**Checkpoints for Session**
+
+Timeline:
+```
+{timeline_line}
+```
+
+| # | Msg | Event | Time |
+|---|-----|-------|------|
+{chr(10).join(table_rows)}
+
+*Use `/rewind <#>` to restore to a checkpoint.*
+*Use `/checkpoint` to create a manual checkpoint.*
+"""
+        await message_list.add_message(checkpoints_text, is_system=True)
+
+    async def handle_create_checkpoint(self, _text: str = "") -> None:
+        """Handle /checkpoint command to create a manual checkpoint."""
+        message_list = self.query_one("#messages", MessageList)
+        checkpoint_service = self.app.get_checkpoint_service()
+
+        if checkpoint_service is None:
+            await message_list.add_message(
+                "**Error:** Persistence not available.",
+                is_system=True,
+            )
+            return
+
+        if self.app.get_current_session_id() is None:
+            await message_list.add_message(
+                "**No current session.** Send a message first.",
+                is_system=True,
+            )
+            return
+
+        checkpoint = await checkpoint_service.create_manual_checkpoint("manual")
+
+        if checkpoint:
+            await message_list.add_message(
+                f"**Checkpoint created at message #{checkpoint.message_index}**",
+                is_system=True,
+            )
+        else:
+            await message_list.add_message(
+                "**Error:** Failed to create checkpoint.",
+                is_system=True,
+            )
+
+    async def handle_rewind(self, text: str) -> None:
+        """Handle /rewind command to restore to a previous checkpoint.
+
+        Creates a new branched session from the checkpoint, preserving original.
+
+        Args:
+            text: Full command text including /rewind.
+        """
+        message_list = self.query_one("#messages", MessageList)
+        checkpoint_repo = self.app.get_checkpoint_repo()
+        session_repo = self.app.get_session_repo()
+        checkpoint_service = self.app.get_checkpoint_service()
+        session_id = self.app.get_current_session_id()
+
+        if checkpoint_repo is None or session_repo is None:
+            await message_list.add_message(
+                "**Error:** Persistence not available.",
+                is_system=True,
+            )
+            return
+
+        if session_id is None:
+            await message_list.add_message(
+                "**No current session.** Send a message first.",
+                is_system=True,
+            )
+            return
+
+        parts = text.strip().split()
+        if len(parts) != 2:
+            await message_list.add_message(
+                "**Usage:** `/rewind <#>`\n\n"
+                "Use `/checkpoints` to see checkpoint numbers.",
+                is_system=True,
+            )
+            return
+
+        try:
+            checkpoint_num = int(parts[1])
+        except ValueError:
+            await message_list.add_message(
+                f"**Error:** Invalid checkpoint number `{parts[1]}`. Must be a number.",
+                is_system=True,
+            )
+            return
+
+        # Get checkpoints to find the one by number (1-indexed)
+        checkpoints = await checkpoint_repo.list_for_session(session_id)
+        if not checkpoints:
+            await message_list.add_message(
+                "**No checkpoints for this session.**",
+                is_system=True,
+            )
+            return
+
+        if checkpoint_num < 1 or checkpoint_num > len(checkpoints):
+            await message_list.add_message(
+                f"**Error:** Checkpoint #{checkpoint_num} not found.\n\n"
+                f"Valid range: 1-{len(checkpoints)}. Use `/checkpoints` to see list.",
+                is_system=True,
+            )
+            return
+
+        target_checkpoint = checkpoints[checkpoint_num - 1]
+
+        # Get original session
+        original_session = await session_repo.get(session_id)
+        if original_session is None:
+            await message_list.add_message(
+                "**Error:** Original session not found.",
+                is_system=True,
+            )
+            return
+
+        # Create new branched session
+        new_name = f"{original_session.name} (rewind from #{checkpoint_num})"
+        new_session = await session_repo.create(new_name)
+
+        # Copy messages up to checkpoint.message_index
+        messages_to_copy = original_session.messages[:target_checkpoint.message_index]
+
+        for msg in messages_to_copy:
+            await session_repo.add_message(new_session.id, msg.role, msg.content)
+
+        # Clear current view and load new session messages
+        await message_list.clear_messages()
+
+        # Reload new session to get messages
+        new_session = await session_repo.get(new_session.id)
+        if new_session:
+            for msg in new_session.messages:
+                is_user = msg.role == "user"
+                is_system_msg = msg.role == "system"
+                await message_list.add_message(
+                    msg.content, is_user=is_user, is_system=is_system_msg
+                )
+
+        # Set as current session
+        self.app.set_current_session_id(new_session.id)
+
+        # Update checkpoint service session
+        if checkpoint_service:
+            checkpoint_service.set_session(
+                new_session.id, len(new_session.messages) if new_session else 0
+            )
+
+        await message_list.add_message(
+            f"**Rewound to checkpoint #{checkpoint_num}.**\n\n"
+            f"Original session preserved. Now in branched session: *{new_name}*",
             is_system=True,
         )
 

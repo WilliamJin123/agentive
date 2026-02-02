@@ -31,7 +31,7 @@ from .theme import HFS_THEME
 
 if TYPE_CHECKING:
     from hfs.agno.providers import ProviderManager
-    from hfs.persistence import SessionRepository
+    from hfs.persistence import CheckpointRepository, CheckpointService, SessionRepository
     from hfs.state.query import QueryInterface
     from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
@@ -78,6 +78,8 @@ class HFSApp(App):
         self._db_engine: AsyncEngine | None = None
         self._session_factory: async_sessionmaker[AsyncSession] | None = None
         self._session_repo: SessionRepository | None = None
+        self._checkpoint_repo: CheckpointRepository | None = None
+        self._checkpoint_service: CheckpointService | None = None
         self._current_session_id: int | None = None
         logger.info(f"User config loaded: output_mode={self._user_config.output_mode}")
 
@@ -139,13 +141,16 @@ class HFSApp(App):
         return self._provider_manager
 
     async def initialize_persistence(self) -> None:
-        """Initialize persistence components (engine, session factory, repository).
+        """Initialize persistence components (engine, session factory, repositories).
 
         Creates the SQLite database at ~/.hfs/sessions.db if it doesn't exist.
+        Initializes SessionRepository, CheckpointRepository, and CheckpointService.
         Should be called once during app startup.
         """
         try:
             from hfs.persistence import (
+                CheckpointRepository,
+                CheckpointService,
                 SessionRepository,
                 create_db_engine,
                 get_session_factory,
@@ -154,6 +159,18 @@ class HFSApp(App):
             self._db_engine = await create_db_engine()
             self._session_factory = get_session_factory(self._db_engine)
             self._session_repo = SessionRepository(self._session_factory)
+            self._checkpoint_repo = CheckpointRepository(self._session_factory)
+
+            # Create checkpoint service (no event bus for now, just manual checkpoints)
+            retention_limit = self._user_config.checkpoint_retention
+            self._checkpoint_service = CheckpointService(
+                event_bus=None,  # TODO: Wire EventBus when available
+                checkpoint_repo=self._checkpoint_repo,
+                state_manager=None,  # TODO: Wire StateManager when available
+                retention_limit=retention_limit,
+            )
+            await self._checkpoint_service.start()
+
             logger.info("Persistence initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize persistence: {e}")
@@ -166,6 +183,22 @@ class HFSApp(App):
             SessionRepository instance or None if persistence not initialized.
         """
         return self._session_repo
+
+    def get_checkpoint_repo(self) -> CheckpointRepository | None:
+        """Get the checkpoint repository for CRUD operations.
+
+        Returns:
+            CheckpointRepository instance or None if persistence not initialized.
+        """
+        return self._checkpoint_repo
+
+    def get_checkpoint_service(self) -> CheckpointService | None:
+        """Get the checkpoint service for creating checkpoints.
+
+        Returns:
+            CheckpointService instance or None if persistence not initialized.
+        """
+        return self._checkpoint_service
 
     def get_current_session_id(self) -> int | None:
         """Get the current chat session ID.
