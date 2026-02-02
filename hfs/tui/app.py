@@ -31,7 +31,9 @@ from .theme import HFS_THEME
 
 if TYPE_CHECKING:
     from hfs.agno.providers import ProviderManager
+    from hfs.persistence import SessionRepository
     from hfs.state.query import QueryInterface
+    from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +74,11 @@ class HFSApp(App):
         self._provider_manager: ProviderManager | None = None
         self._query_interface: QueryInterface | None = None
         self._user_config: UserConfig = ConfigLoader().load()
+        # Persistence components (initialized async in on_mount)
+        self._db_engine: AsyncEngine | None = None
+        self._session_factory: async_sessionmaker[AsyncSession] | None = None
+        self._session_repo: SessionRepository | None = None
+        self._current_session_id: int | None = None
         logger.info(f"User config loaded: output_mode={self._user_config.output_mode}")
 
     @property
@@ -131,13 +138,61 @@ class HFSApp(App):
                 return None
         return self._provider_manager
 
-    def on_mount(self) -> None:
+    async def initialize_persistence(self) -> None:
+        """Initialize persistence components (engine, session factory, repository).
+
+        Creates the SQLite database at ~/.hfs/sessions.db if it doesn't exist.
+        Should be called once during app startup.
+        """
+        try:
+            from hfs.persistence import (
+                SessionRepository,
+                create_db_engine,
+                get_session_factory,
+            )
+
+            self._db_engine = await create_db_engine()
+            self._session_factory = get_session_factory(self._db_engine)
+            self._session_repo = SessionRepository(self._session_factory)
+            logger.info("Persistence initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize persistence: {e}")
+            # Persistence is optional - app can run without it
+
+    def get_session_repo(self) -> SessionRepository | None:
+        """Get the session repository for CRUD operations.
+
+        Returns:
+            SessionRepository instance or None if persistence not initialized.
+        """
+        return self._session_repo
+
+    def get_current_session_id(self) -> int | None:
+        """Get the current chat session ID.
+
+        Returns:
+            Current session ID or None if no session active.
+        """
+        return self._current_session_id
+
+    def set_current_session_id(self, session_id: int) -> None:
+        """Set the current chat session ID.
+
+        Args:
+            session_id: ID of the session to set as current.
+        """
+        self._current_session_id = session_id
+        logger.info(f"Current session set to: {session_id}")
+
+    async def on_mount(self) -> None:
         """Called when app is mounted.
 
-        Registers the HFS theme and pushes the chat screen.
+        Registers the HFS theme, initializes persistence, and pushes the chat screen.
         """
         self.register_theme(HFS_THEME)
         self.theme = "hfs"
+        # Initialize persistence (async)
+        await self.initialize_persistence()
         self.push_screen("chat")
 
     def compose(self) -> ComposeResult:

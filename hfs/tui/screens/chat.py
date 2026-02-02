@@ -55,6 +55,9 @@ class ChatScreen(Screen):
         "/inspect": "open_inspection",
         "/config": "handle_config",
         "/mode": "handle_mode",
+        "/sessions": "handle_sessions",
+        "/resume": "handle_resume",
+        "/rename": "handle_rename",
     }
 
     DEFAULT_CSS = """
@@ -238,8 +241,14 @@ class ChatScreen(Screen):
         spinner = self.query_one("#spinner", PulsingDot)
         status_bar = self.query_one("#status-bar", HFSStatusBar)
 
+        # Ensure we have a session for persistence
+        await self._ensure_session()
+
         # Add user message
         await message_list.add_message(text, is_user=True)
+
+        # Persist user message
+        await self._persist_message("user", text)
 
         # Update token count (estimate ~4 chars per token for input)
         user_tokens = max(1, len(text) // 4)
@@ -359,6 +368,11 @@ class ChatScreen(Screen):
                 estimated_tokens = max(1, response_length // 4)
                 status_bar.add_tokens(estimated_tokens)
 
+            # Persist assistant message
+            full_response = message.content
+            if full_response:
+                await self._persist_message("assistant", full_response)
+
     async def _stream_mock_response(
         self,
         message: ChatMessage,
@@ -408,6 +422,8 @@ And a list:
             # Update token count for response (mock: estimate ~4 chars per token)
             response_tokens = max(1, len(mock_response) // 4)
             status_bar.add_tokens(response_tokens)
+            # Persist mock response
+            await self._persist_message("assistant", mock_response)
 
     async def show_help(self, _text: str = "") -> None:
         """Show help message with available commands."""
@@ -418,6 +434,9 @@ And a list:
 |---------|-------------|
 | `/help` | Show this help message |
 | `/clear` | Clear all messages |
+| `/sessions` | List saved sessions |
+| `/resume <id>` | Resume a previous session |
+| `/rename <name>` | Rename current session |
 | `/config` | View current configuration |
 | `/config set key value` | Change a setting |
 | `/mode compact` or `/mode verbose` | Switch output mode |
@@ -580,3 +599,208 @@ Set `keybinding_mode: vim` in config for modal editing.
 
         # Delegate to config set
         await self.handle_config(f"/config set output_mode {mode}")
+
+    async def _ensure_session(self) -> None:
+        """Ensure a session exists for persistence.
+
+        Creates a new session if none exists. Called before sending messages.
+        """
+        repo = self.app.get_session_repo()
+        if repo is None:
+            return  # Persistence not available
+
+        if self.app.get_current_session_id() is None:
+            # Create new session
+            session = await repo.create()
+            self.app.set_current_session_id(session.id)
+            logger.info(f"Created new session: {session.id}")
+
+    async def _persist_message(self, role: str, content: str) -> None:
+        """Persist a message to the current session.
+
+        Args:
+            role: Message role (user, assistant, system).
+            content: Message content text.
+        """
+        repo = self.app.get_session_repo()
+        session_id = self.app.get_current_session_id()
+
+        if repo is None or session_id is None:
+            return  # Persistence not available
+
+        try:
+            await repo.add_message(session_id, role, content)
+            logger.debug(f"Persisted {role} message to session {session_id}")
+        except Exception as e:
+            logger.error(f"Failed to persist message: {e}")
+
+    async def handle_sessions(self, _text: str = "") -> None:
+        """Handle /sessions command to list saved sessions.
+
+        Shows a table of recent sessions with ID, name, message count, and date.
+        """
+        message_list = self.query_one("#messages", MessageList)
+        repo = self.app.get_session_repo()
+
+        if repo is None:
+            await message_list.add_message(
+                "**Error:** Persistence not available.",
+                is_system=True,
+            )
+            return
+
+        sessions = await repo.list_recent(20)
+
+        if not sessions:
+            await message_list.add_message(
+                "**No saved sessions.**\n\n"
+                "Send a message to start a new session.",
+                is_system=True,
+            )
+            return
+
+        current_id = self.app.get_current_session_id()
+        table_rows = []
+        for s in sessions:
+            msg_count = len(s.messages)
+            created = s.created_at.strftime("%Y-%m-%d %H:%M")
+            current_marker = " (current)" if s.id == current_id else ""
+            # Truncate long names
+            name = s.name[:40] + "..." if len(s.name) > 40 else s.name
+            table_rows.append(f"| {s.id} | {name}{current_marker} | {msg_count} | {created} |")
+
+        sessions_text = f"""**Saved Sessions**
+
+| ID | Name | Messages | Created |
+|----|------|----------|---------|
+{chr(10).join(table_rows)}
+
+*Use `/resume <id>` to load a session.*
+*Use `/rename <name>` to rename current session.*
+"""
+        await message_list.add_message(sessions_text, is_system=True)
+
+    async def handle_resume(self, text: str) -> None:
+        """Handle /resume command to load a previous session.
+
+        Args:
+            text: Full command text including /resume.
+        """
+        message_list = self.query_one("#messages", MessageList)
+        repo = self.app.get_session_repo()
+
+        if repo is None:
+            await message_list.add_message(
+                "**Error:** Persistence not available.",
+                is_system=True,
+            )
+            return
+
+        parts = text.strip().split()
+        if len(parts) != 2:
+            await message_list.add_message(
+                "**Usage:** `/resume <session_id>`\n\n"
+                "Use `/sessions` to see available sessions.",
+                is_system=True,
+            )
+            return
+
+        try:
+            session_id = int(parts[1])
+        except ValueError:
+            await message_list.add_message(
+                f"**Error:** Invalid session ID `{parts[1]}`. Must be a number.",
+                is_system=True,
+            )
+            return
+
+        session = await repo.get(session_id)
+        if session is None:
+            await message_list.add_message(
+                f"**Error:** Session `{session_id}` not found.",
+                is_system=True,
+            )
+            return
+
+        # Clear current messages
+        await message_list.clear_messages()
+
+        # Load session messages
+        for msg in session.messages:
+            is_user = msg.role == "user"
+            is_system = msg.role == "system"
+            await message_list.add_message(msg.content, is_user=is_user, is_system=is_system)
+
+        # Set current session
+        self.app.set_current_session_id(session_id)
+
+        await message_list.add_message(
+            f"**Resumed session:** {session.name}\n\n"
+            f"*{len(session.messages)} messages loaded.*",
+            is_system=True,
+        )
+
+    async def handle_rename(self, text: str) -> None:
+        """Handle /rename command to rename a session.
+
+        Supports:
+            /rename <new_name> - Rename current session
+            /rename <id> <new_name> - Rename specific session
+
+        Args:
+            text: Full command text including /rename.
+        """
+        message_list = self.query_one("#messages", MessageList)
+        repo = self.app.get_session_repo()
+
+        if repo is None:
+            await message_list.add_message(
+                "**Error:** Persistence not available.",
+                is_system=True,
+            )
+            return
+
+        parts = text.strip().split(maxsplit=2)
+        if len(parts) < 2:
+            await message_list.add_message(
+                "**Usage:**\n"
+                "- `/rename <new_name>` - Rename current session\n"
+                "- `/rename <id> <new_name>` - Rename specific session",
+                is_system=True,
+            )
+            return
+
+        # Check if first arg is a number (session ID)
+        try:
+            session_id = int(parts[1])
+            if len(parts) < 3:
+                await message_list.add_message(
+                    "**Error:** Missing new name.\n\n"
+                    "**Usage:** `/rename <id> <new_name>`",
+                    is_system=True,
+                )
+                return
+            new_name = parts[2]
+        except ValueError:
+            # First arg is the name, use current session
+            session_id = self.app.get_current_session_id()
+            if session_id is None:
+                await message_list.add_message(
+                    "**Error:** No current session. Send a message first.",
+                    is_system=True,
+                )
+                return
+            new_name = " ".join(parts[1:])
+
+        session = await repo.rename(session_id, new_name)
+        if session is None:
+            await message_list.add_message(
+                f"**Error:** Session `{session_id}` not found.",
+                is_system=True,
+            )
+            return
+
+        await message_list.add_message(
+            f"**Session renamed to:** {new_name}",
+            is_system=True,
+        )
