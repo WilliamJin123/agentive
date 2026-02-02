@@ -34,7 +34,9 @@ from .json_export import (
     SessionExport,
     export_to_json,
 )
+from .json_import import ImportResult, import_from_json
 from .markdown import export_to_markdown
+from .migration import migrate_export
 
 __all__ = [
     # Markdown export
@@ -44,4 +46,9 @@ __all__ = [
     "EXPORT_SCHEMA_VERSION",
     "ExportMetadata",
     "SessionExport",
+    # JSON import
+    "import_from_json",
+    "ImportResult",
+    # Migration
+    "migrate_export",
 ]
