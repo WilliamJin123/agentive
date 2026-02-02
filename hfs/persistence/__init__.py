@@ -12,8 +12,10 @@ Exports:
     get_session_factory: Factory for async session maker
     SessionRepository: CRUD operations for sessions
     CheckpointRepository: CRUD operations for checkpoints
+    CheckpointService: Event-driven auto-checkpointing service
 """
 
+from .checkpoint import CheckpointService
 from .engine import create_db_engine, get_session_factory
 from .models import Base, CheckpointModel, MessageModel, SessionModel
 from .repository import CheckpointRepository, SessionRepository
@@ -27,4 +29,5 @@ __all__ = [
     "get_session_factory",
     "SessionRepository",
     "CheckpointRepository",
+    "CheckpointService",
 ]
