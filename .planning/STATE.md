@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-30)
 
 **Core value:** Rich terminal UI with full observability into multi-agent negotiation
-**Current focus:** Phase 13 - Persistence & Plugins
+**Current focus:** Phase 13 - Persistence & Plugins (COMPLETE)
 
 ## Current Position
 
 Phase: 13 of 13 (Persistence & Plugins)
-Plan: 3 of 4 in current phase
-Status: In progress
-Last activity: 2026-02-01 - Completed 13-03-PLAN.md
+Plan: 4 of 4 in current phase
+Status: Phase complete
+Last activity: 2026-02-02 - Completed 13-04-PLAN.md
 
-Progress: [██████████████████░░] 90% (18/20 plans through phase 13)
+Progress: [████████████████████] 100% (19/19 plans through phase 13)
 
 ## Performance Metrics
 
@@ -24,10 +24,10 @@ Progress: [██████████████████░░] 90% (18
 - Total commits: 108
 - Duration: 2 days (2026-01-29 to 2026-01-30)
 
-**v1.1 Milestone:**
-- Total plans completed: 15
+**v1.1 Milestone (completed):**
+- Total plans completed: 19
 - Average duration: 3.5 min
-- Total execution time: 55 min
+- Total execution time: 59 min
 
 **By Phase (v1.1):**
 
@@ -38,7 +38,7 @@ Progress: [██████████████████░░] 90% (18
 | 10 | 5/5 | 13 min | 2.6 min |
 | 11 | 2/2 | 8 min | 4 min |
 | 12 | 3/3 | 12 min | 4 min |
-| 13 | 3/4 | 12 min | 4 min |
+| 13 | 4/4 | 16 min | 4 min |
 
 ## Accumulated Context
 
@@ -104,6 +104,11 @@ Recent decisions for v1.1:
 - EXPORT_SCHEMA_VERSION = 1.0.0 for versioned exports (13-03)
 - Sequential migration pattern for schema upgrades (13-03)
 - Exports saved to ~/.hfs/exports/ by default (13-03)
+- Plugin discovery scans ~/.hfs/plugins/ for subdirectories with manifest.yaml (13-04)
+- Manifest requires name, version; optional description, entry_point, capabilities (13-04)
+- Permission approval persists in ~/.hfs/plugin_permissions.yaml (13-04)
+- COMMANDS dict in plugin module registers slash commands (13-04)
+- Lifecycle hooks are module-level functions (on_start, on_message, on_run_complete, on_exit) (13-04)
 
 ### Pending Todos
 
@@ -116,11 +121,11 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 13-02-PLAN.md, 13-03-PLAN.md
+Stopped at: Completed 13-04-PLAN.md (Plugin System) - Phase 13 complete
 Resume file: None
-Next: 13-04 (Plugin Architecture)
+Next: v1.1 milestone complete
 
-**Phase 13 progress - deliverables:**
+**Phase 13 progress - deliverables (complete):**
 - SQLAlchemy persistence module with SessionModel, MessageModel (13-01)
 - SessionRepository with CRUD operations (13-01)
 - /sessions, /resume, /rename commands (13-01)
@@ -132,3 +137,9 @@ Next: 13-04 (Plugin Architecture)
 - Export module with markdown and JSON export (13-03)
 - Import with automatic schema migration (13-03)
 - /export md, /export json, /import commands (13-03)
+- Plugin discovery from ~/.hfs/plugins/ directory (13-04)
+- PluginManifest for manifest.yaml validation (13-04)
+- PermissionManager for approval persistence (13-04)
+- HFSHookSpec protocol with lifecycle hooks (13-04)
+- PluginManager for command and hook execution (13-04)
+- /plugins command for plugin management (13-04)
